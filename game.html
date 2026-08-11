@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>INTEGER ADVENTURE - ภารกิจพิชิตอาณาจักรจำนวนเต็ม</title>
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --panel-bg: #1e293b;
+      --card-bg: #334155;
+      --accent-gold: #f59e0b;
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --accent-purple: #8b5cf6;
+      --accent-orange: #f97316;
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 0; }
+    body { background-color: var(--bg-dark); color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+
+    .hidden { display: none !important; }
+    button { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: all 0.2s ease-in-out; }
+    button:hover { opacity: 0.95; transform: translateY(-2px); }
+    button:active { transform: translateY(0); }
+
+    /* --- Views --- */
+    .view { width: 100%; max-width: 1100px; background: var(--panel-bg); border-radius: 20px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); border: 1px solid #475569; }
+
+    /* Main Menu */
+    .menu-container { text-align: center; padding: 40px 20px; }
+    .menu-title { font-size: 2.8rem; color: var(--accent-gold); margin-bottom: 10px; text-shadow: 0 0 15px rgba(245, 158, 11, 0.5); letter-spacing: 1px; }
+    .menu-subtitle { font-size: 1.25rem; color: #94a3b8; margin-bottom: 35px; }
+    .menu-btn { display: block; width: 280px; margin: 15px auto; padding: 16px; font-size: 1.15rem; color: white; background: linear-gradient(135deg, var(--accent-blue), #1d4ed8); border-radius: 12px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
+    .menu-btn.hof { background: linear-gradient(135deg, var(--accent-purple), #6d28d9); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4); }
+
+    /* Character Selection View */
+    .char-select-header { text-align: center; margin-bottom: 25px; }
+    .char-select-title { font-size: 2rem; color: var(--accent-cyan); text-shadow: 0 0 10px rgba(6, 182, 212, 0.4); }
+    .char-select-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px; }
+    
+    .player-select-box { background: #0f172a; padding: 20px; border-radius: 16px; border: 2px solid #334155; }
+    .player-select-box.p1-box { border-color: var(--accent-cyan); }
+    .player-select-box.p2-box { border-color: var(--accent-orange); }
+
+    .player-title-tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; margin-bottom: 12px; }
+    .p1-tag { background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
+    .p2-tag { background: rgba(249, 115, 22, 0.2); color: var(--accent-orange); border: 1px solid var(--accent-orange); }
+
+    .name-input-group { margin-bottom: 15px; }
+    .name-input-group label { display: block; font-size: 0.9rem; color: #94a3b8; margin-bottom: 5px; text-align: left; }
+    .name-input { width: 100%; padding: 10px 14px; background: #1e293b; border: 1px solid #475569; border-radius: 8px; color: white; font-size: 1rem; outline: none; }
+    .name-input:focus { border-color: var(--accent-gold); }
+
+    .robot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 10px; padding: 10px 5px; }
+    
+    /* CSS ตัวเลือกหุ่นยนต์ หน้าเลือกตัวละคร */
+    .robot-card { 
+      background: #1e293b; 
+      border: 2px solid #334155; 
+      border-radius: 12px; 
+      padding: 14px 6px; 
+      text-align: center; 
+      cursor: pointer; 
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); 
+      position: relative;
+    }
+    .robot-card:hover { 
+      border-color: var(--accent-gold); 
+      transform: translateY(-4px); 
+    }
+
+    .robot-icon { 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      min-height: 55px; 
+      margin-bottom: 8px; 
+      overflow: visible;
+    }
+    .robot-icon img { 
+      width: 44px; 
+      height: 44px; 
+      object-fit: contain; 
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); 
+    }
+    .robot-name { font-size: 0.8rem; font-weight: bold; color: #e2e8f0; display: block; margin-top: 4px; }
+    .robot-desc { font-size: 0.68rem; color: #94a3b8; display: block; margin-top: 2px; }
+
+    /* เอฟเฟกต์การ์ดที่ถูกเลือก สำหรับ P1 และ P2 */
+    .p1-box .robot-card.selected { 
+      border-color: var(--accent-cyan); 
+      background: rgba(6, 182, 212, 0.18); 
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.7), inset 0 0 12px rgba(6, 182, 212, 0.4); 
+      transform: translateY(-2px);
+      z-index: 10;
+    }
+    .p1-box .robot-card.selected .robot-icon img {
+      transform: scale(3) translateY(-8px); 
+      filter: drop-shadow(0 0 14px var(--accent-cyan)) drop-shadow(0 0 4px #ffffff); 
+    }
+
+    .p2-box .robot-card.selected { 
+      border-color: var(--accent-orange); 
+      background: rgba(249, 115, 22, 0.18); 
+      box-shadow: 0 0 25px rgba(249, 115, 22, 0.7), inset 0 0 12px rgba(249, 115, 22, 0.4); 
+      transform: translateY(-2px);
+      z-index: 10;
+    }
+    .p2-box .robot-card.selected .robot-icon img {
+      transform: scale(3) translateY(-8px); 
+      filter: drop-shadow(0 0 14px var(--accent-orange)) drop-shadow(0 0 4px #ffffff); 
+    }
+
+    .start-battle-btn { display: block; width: 100%; max-width: 320px; margin: 0 auto; padding: 16px; font-size: 1.3rem; background: linear-gradient(135deg, #10b981, #059669); color: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); text-transform: uppercase; letter-spacing: 1px; }
+
+    /* Hall of Fame */
+    .hof-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .podium { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-bottom: 30px; }
+    .podium-card { background: #334155; padding: 15px; border-radius: 12px; text-align: center; width: 130px; }
+    .podium-card.r1 { height: 170px; border: 2px solid var(--accent-gold); background: #475569; }
+    .podium-card.r2 { height: 140px; }
+    .podium-card.r3 { height: 120px; }
+    .hof-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    .hof-table th, .hof-table td { padding: 12px; text-align: center; border-bottom: 1px solid #334155; }
+
+    /* Game Screen Layout */
+    .game-layout { display: grid; grid-template-columns: 1fr 310px; gap: 20px; }
+    
+    /* Board Area */
+    .board-frame { 
+      position: relative; 
+      width: 100%; 
+      aspect-ratio: 45.68 / 42.86; 
+      background-image: url('board.png'); 
+      background-size: 100% 100%; 
+      background-repeat: no-repeat; 
+      background-position: center; 
+      border-radius: 16px;
+      border: 3px solid #334155;
+      overflow: hidden;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+    }
+
+    .board-grid { position: relative; width: 100%; height: 100%; }
+
+    .tile { 
+      position: absolute;
+      width: 10%; 
+      height: 10%; 
+      transform: translate(-50%, -50%); 
+      display: flex; 
+      flex-direction: column;
+      align-items: center; 
+      justify-content: center; 
+      background: transparent; 
+      border-radius: 50%;
+      border: none;
+    }
+
+    .tile-num { 
+      position: absolute; 
+      top: 22px; 
+      font-weight: bold; 
+      color: #ffffff; 
+      font-size: 1rem; 
+      text-shadow: 0 1px 3px black, 0 0 5px rgba(0,0,0,0.8); 
+      pointer-events: none; 
+    }
+
+    .tokens { 
+      display: flex; 
+      gap: 3px; 
+      font-size: 1.25rem; 
+      margin-top: 8px; 
+      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.9)); 
+      z-index: 5;
+    }
+
+    .token-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.85);
+      border: 2px solid var(--accent-gold);
+      overflow: hidden;
+      animation: bounce 0.4s ease infinite alternate;
+    }
+
+    @keyframes bounce {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-4px); }
+    }
+
+    /* --- Sidebar HUD + เอฟเฟกต์รูปขยายและเรืองแสงเมื่อถึงตาเล่น --- */
+    .hud { display: flex; flex-direction: column; gap: 15px; }
+    .hud-box { background: #0f172a; border-radius: 14px; padding: 16px; border: 1px solid #334155; }
+    
+    .player-card { 
+      padding: 12px; 
+      border-radius: 10px; 
+      margin-bottom: 10px; 
+      background: #1e293b; 
+      border: 2px solid transparent; 
+      transition: all 0.35s ease; 
+    }
+    .player-card.active { 
+      border-color: var(--accent-gold); 
+      background: rgba(245, 158, 11, 0.12); 
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.3); 
+    }
+    
+    .player-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+    
+    .player-card-icon { 
+      width: 44px; 
+      height: 44px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      overflow: visible; /* ป้องกันไม่ให้รูปถูกตัดเมื่อขยายใหญ่ */
+    }
+    .player-card-icon img { 
+      width: 40px; 
+      height: 40px; 
+      object-fit: contain; 
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); 
+    }
+
+    /* เมื่อถึงตาทอยลูกเต๋า: ขยายรูปหุ่นรบ 1.5 เท่า + ส่องแสงเรืองออร่า */
+    #p1-card.active .player-card-icon img {
+      transform: scale(2);
+      filter: drop-shadow(0 0 10px var(--accent-cyan)) drop-shadow(0 0 3px #ffffff);
+    }
+
+    #p2-card.active .player-card-icon img {
+      transform: scale(2);
+      filter: drop-shadow(0 0 10px var(--accent-orange)) drop-shadow(0 0 3px #ffffff);
+    }
+
+    .player-card-name { font-weight: bold; font-size: 1rem; color: #f8fafc; }
+    .player-card-title { font-size: 0.75rem; color: var(--accent-cyan); display: block; }
+    
+    .dice-btn { width: 100%; padding: 15px; font-size: 1.25rem; background: linear-gradient(135deg, var(--accent-gold), #d97706); color: #0f172a; font-weight: bold; border-radius: 10px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3); }
+    
+    /* Modal */
+    .modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(4px); }
+    .modal-card { background: var(--panel-bg); padding: 30px; border-radius: 18px; text-align: center; width: 380px; border: 2px solid var(--accent-cyan); box-shadow: 0 0 30px rgba(6, 182, 212, 0.3); }
+    .modal-card input { width: 100%; padding: 12px; margin: 18px 0; font-size: 1.3rem; border-radius: 10px; border: 1px solid #475569; background: #0f172a; color: white; text-align: center; outline: none; }
+    .modal-card input:focus { border-color: var(--accent-cyan); }
+    .token-badge img { width: 100%; height: 100%; object-fit: contain; }
+  </style>
+</head>
+<body>
+
+  <!-- 1. MAIN MENU VIEW -->
+  <div id="view-menu" class="view">
+    <div class="menu-container">
+      <h1 class="menu-title">⚔️ INTEGER ADVENTURE ⚔️</h1>
+      <p class="menu-subtitle">🤖 ศึกสงครามหุ่นนักรบ พิชิตอาณาจักรจำนวนเต็ม</p>
+      <button class="menu-btn" onclick="goToCharSelect()">🎮 เริ่มเล่นเกม (เลือกหุ่นนักรบ)</button>
+      <button class="menu-btn hof" onclick="showHOF()">🏆 หอเกียรติยศ (Hall of Fame)</button>
+    </div>
+  </div>
+
+  <!-- 2. CHARACTER SELECTION VIEW -->
+  <div id="view-char-select" class="view hidden">
+    <div class="char-select-header">
+      <h2 class="char-select-title">🤖 เลือกหุ่นนักรบประจำตัว</h2>
+      <p style="color:#94a3b8; font-size:0.95rem; margin-top:5px;">ตั้งชื่อและเลือกหุ่นยนต์รบสไตล์คุณก่อนลงสู่สมรภูมิคณิตศาสตร์</p>
+    </div>
+
+    <div class="char-select-grid">
+      <!-- Player 1 Selection -->
+      <div class="player-select-box p1-box">
+        <span class="player-title-tag p1-tag">🎮 ผู้เล่นคนแรก (P1)</span>
+        <div class="name-input-group">
+          <label for="p1-name-input">ชื่อนักรบ P1:</label>
+          <input type="text" id="p1-name-input" class="name-input" value="นักรบสปาร์ก" placeholder="กรอกชื่อผู้เล่น 1">
+        </div>
+        <label style="font-size:0.85rem; color:#94a3b8;">เลือกยูนิตหุ่นยนต์:</label>
+        <div class="robot-grid" id="p1-robot-grid"></div>
+      </div>
+
+      <!-- Player 2 Selection -->
+      <div class="player-select-box p2-box">
+        <span class="player-title-tag p2-tag">🎮 ผู้เล่นคนที่สอง (P2)</span>
+        <div class="name-input-group">
+          <label for="p2-name-input">ชื่อนักรบ P2:</label>
+          <input type="text" id="p2-name-input" class="name-input" value="จักรกลไซบอร์ก" placeholder="กรอกชื่อผู้เล่น 2">
+        </div>
+        <label style="font-size:0.85rem; color:#94a3b8;">เลือกยูนิตหุ่นยนต์:</label>
+        <div class="robot-grid" id="p2-robot-grid"></div>
+      </div>
+    </div>
+
+    <button class="start-battle-btn" onclick="confirmStartGame()">🚀 พร้อมลุย! เริ่มการแข่งขัน</button>
+    <div style="text-align: center; margin-top: 15px;">
+      <button onclick="showMenu()" style="background: transparent; color: #94a3b8; padding: 6px 16px; font-size: 0.9rem;">⬅️ กลับเมนูหลัก</button>
+    </div>
+  </div>
+
+  <!-- 3. HALL OF FAME VIEW -->
+  <div id="view-hof" class="view hidden">
+    <div class="hof-header">
+      <h2>🏆 หอเกียรติยศหุ่นนักรบประจำวิชา</h2>
+      <button onclick="showMenu()" style="padding: 8px 16px; background: #475569; color: white;">⬅️ เมนูหลัก</button>
+    </div>
+    <div class="podium">
+      <div class="podium-card r2"><div>🥈</div><strong id="hof-name-2">-</strong><div style="color:var(--accent-blue)" id="hof-score-2">0 💎</div></div>
+      <div class="podium-card r1"><div>👑</div><strong id="hof-name-1">-</strong><div style="color:var(--accent-gold)" id="hof-score-1">0 💎</div></div>
+      <div class="podium-card r3"><div>🥉</div><strong id="hof-name-3">-</strong><div style="color:#cd7f32" id="hof-score-3">0 💎</div></div>
+    </div>
+    <table class="hof-table">
+      <thead><tr><th>อันดับ</th><th>ชื่อหุ่นนักรบ</th><th>ยูนิต</th><th>คะแนน Crystal</th></tr></thead>
+      <tbody id="hof-list"></tbody>
+    </table>
+  </div>
+
+  <!-- 4. GAME VIEW -->
+  <div id="view-game" class="view hidden">
+    <div class="game-layout">
+      <!-- Board Area -->
+      <div class="board-frame">
+        <div id="board-grid" class="board-grid"></div>
+      </div>
+
+      <!-- HUD Panel -->
+      <div class="hud">
+        <div class="hud-box">
+          <h3 style="color:var(--accent-cyan); font-size:1.1rem; margin-bottom:10px;">สถานะยูนิตหุ่นรบ</h3>
+          
+          <div id="p1-card" class="player-card active">
+            <div class="player-card-header">
+              <span id="p1-card-icon" class="player-card-icon"></span>
+              <div>
+                <span id="p1-card-name" class="player-card-name">ผู้เล่น 1</span>
+                <span id="p1-card-title" class="player-card-title">TITAN-01</span>
+              </div>
+            </div>
+            <div style="font-size:0.9rem; margin-top:5px;">Crystal: <span id="p1-crystal" style="color:var(--accent-gold); font-weight:bold;">0</span> 💎</div>
+          </div>
+
+          <div id="p2-card" class="player-card">
+            <div class="player-card-header">
+              <span id="p2-card-icon" class="player-card-icon"></span>
+              <div>
+                <span id="p2-card-name" class="player-card-name">ผู้เล่น 2</span>
+                <span id="p2-card-title" class="player-card-title">MECHA-REX</span>
+              </div>
+            </div>
+            <div style="font-size:0.9rem; margin-top:5px;">Crystal: <span id="p2-crystal" style="color:var(--accent-gold); font-weight:bold;">0</span> 💎</div>
+          </div>
+        </div>
+
+        <div class="hud-box" style="text-align: center;">
+          <div id="turn-display" style="font-weight:bold; font-size:1rem; color:var(--accent-gold); margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:6px;">ตาของ: ผู้เล่น 1</div>
+          <div id="dice-result" style="font-size: 2.5rem; margin: 8px 0; min-height: 50px;">🎲</div>
+          <button id="btn-roll" class="dice-btn" onclick="rollDice()">🎲 ทอยลูกเต๋า</button>
+        </div>
+
+        <button onclick="showMenu()" style="background:#dc2626; color:white; padding:12px; font-size:0.95rem; border-radius:10px;">🚪 ออกจากเกม</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTION MODAL -->
+  <div id="question-modal" class="modal hidden">
+    <div class="modal-card">
+      <span id="modal-realm-tag" style="font-size:0.9rem; color:var(--accent-gold); font-weight:bold; text-transform:uppercase; letter-spacing:1px;">ด่านบวก</span>
+      <h2 id="q-text" style="font-size: 2.2rem; margin: 15px 0; color:#ffffff; font-weight:bold;">12 + 5 = ?</h2>
+      <input type="number" id="q-answer" placeholder="พิมพ์คำตอบ..." autofocus autocomplete="off">
+      <button onclick="submitAnswer()" style="width:100%; padding:14px; background:linear-gradient(135deg, var(--accent-green), #059669); color:white; font-size:1.15rem; border-radius:10px; font-weight:bold;">⚡ ยืนยันคำตอบ</button>
+    </div>
+  </div>
+
+  <script>
+    const ROBOT_PRESETS = [
+      { id: 'titan', name: 'TITAN-01', image: 'images/titan.png', desc: 'สายถึกเกราะเหล็ก', title: 'ไททันเหล็กกล้า' },
+      { id: 'mecha', name: 'MECHA-REX', image: 'images/mecha.png', desc: 'หมัดเหล็กจอมทำลาย', title: 'จักรกลหมัดเหล็ก' },
+      { id: 'cyber', name: 'CYBER-SPARK', image: 'images/cyber.png', desc: 'พลังงานพลาสม่า', title: 'ไซเบอร์พลาสม่า' },
+      { id: 'aegis', name: 'AEGIS-PRIME', image: 'images/aegis.png', desc: 'โล่พลังงานไร้พ่าย', title: 'เอจิสเกราะหนัก' },
+      { id: 'magma', name: 'MAGMA-CORE', image: 'images/magma.png', desc: 'หุ่นหลอมเหลวความร้อน', title: 'แมกมาคอร์' },
+      { id: 'chrono', name: 'CHRONO-MECH', image: 'images/chrono.png', desc: 'จักรกลข้ามมิติเวลา', title: 'โครโนเมกะ' }
+    ];
+
+    let p1SelectedRobotIndex = 0;
+    let p2SelectedRobotIndex = 1;
+
+    const TOTAL_TILES = 42;
+
+    const tilePositions = [
+      { left: 23.6, top: 13.5 }, { left: 29.4, top: 12.3 }, { left: 34.8, top: 11.9 }, { left: 40.4, top: 12.4 }, 
+      { left: 45.9, top: 13.1 }, { left: 51.4, top: 12.9 }, { left: 57.4, top: 12.7 }, { left: 63.1, top: 12.5 }, 
+      { left: 68.8, top: 12.2 }, { left: 74.2, top: 12.0 }, { left: 79.8, top: 13.4 }, { left: 84.8, top: 14.9 }, 
+      { left: 83.6, top: 21.9 }, { left: 84.5, top: 29.9 }, { left: 86.7, top: 37.6 }, { left: 86.7, top: 43.8 }, 
+      { left: 84.4, top: 51.8 }, { left: 84.1, top: 59.1 }, { left: 85.9, top: 66.6 }, { left: 86.3, top: 73.6 }, 
+      { left: 83.7, top: 80.7 }, { left: 79.1, top: 87.8 }, { left: 72.0, top: 86.9 }, { left: 65.4, top: 87.0 }, 
+      { left: 59.6, top: 87.2 }, { left: 54.2, top: 87.6 }, { left: 48.6, top: 88.3 }, { left: 43.5, top: 88.0 }, 
+      { left: 37.9, top: 88.0 }, { left: 32.9, top: 86.9 }, { left: 27.8, top: 86.2 }, { left: 22.4, top: 86.4 }, 
+      { left: 16.7, top: 83.8 }, { left: 10.8, top: 82.8 }, { left: 11.1, top: 70.9 }, { left: 13.2, top: 64.5 }, 
+      { left: 15.5, top: 57.6 }, { left: 16.2, top: 49.8 }, { left: 15.2, top: 42.3 }, { left: 16.6, top: 35.1 }, 
+      { left: 18.2, top: 28.3 }, { left: 20.5, top: 21.5 }
+    ];
+
+    let players = [
+      { id: 0, name: 'ผู้เล่น 1', robotName: 'TITAN-01', image: 'images/titan.png', title: 'ไททันเหล็กกล้า', pos: 1, crystals: 0 },
+      { id: 1, name: 'ผู้เล่น 2', robotName: 'MECHA-REX', image: 'images/mecha.png', title: 'จักรกลหมัดเหล็ก', pos: 1, crystals: 0 }
+    ];
+    let currentTurn = 0;
+    let currentQuestion = null;
+
+    function getRealm(tileNum) {
+      if (tileNum <= 12) return { name: 'บวก (Addition)', type: 'add', color: 'var(--accent-green)' };
+      if (tileNum <= 22) return { name: 'ลบ (Subtraction)', type: 'sub', color: 'var(--accent-purple)' };
+      if (tileNum <= 34) return { name: 'คูณ (Multiplication)', type: 'mul', color: 'var(--accent-red)' };
+      return { name: 'หาร (Division)', type: 'div', color: 'var(--accent-blue)' };
+    }
+
+    function switchView(viewId) {
+      document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+      document.getElementById(viewId).classList.remove('hidden');
+    }
+    function showMenu() { switchView('view-menu'); }
+    function showHOF() { loadHOFData(); switchView('view-hof'); }
+
+    function goToCharSelect() {
+      renderRobotGrids();
+      switchView('view-char-select');
+    }
+
+    function renderRobotGrids() {
+      const p1Grid = document.getElementById('p1-robot-grid');
+      const p2Grid = document.getElementById('p2-robot-grid');
+
+      p1Grid.innerHTML = ROBOT_PRESETS.map((r, idx) => `
+        <div class="robot-card ${idx === p1SelectedRobotIndex ? 'selected' : ''}" onclick="selectRobot(1, ${idx})">
+          <span class="robot-icon"><img src="${r.image}" alt="${r.name}"></span>
+          <span class="robot-name">${r.name}</span>
+          <span class="robot-desc">${r.desc}</span>
+        </div>
+      `).join('');
+
+      p2Grid.innerHTML = ROBOT_PRESETS.map((r, idx) => `
+        <div class="robot-card ${idx === p2SelectedRobotIndex ? 'selected' : ''}" onclick="selectRobot(2, ${idx})">
+          <span class="robot-icon"><img src="${r.image}" alt="${r.name}"></span>
+          <span class="robot-name">${r.name}</span>
+          <span class="robot-desc">${r.desc}</span>
+        </div>
+      `).join('');
+    }
+
+    function selectRobot(playerNum, index) {
+      if (playerNum === 1) {
+        p1SelectedRobotIndex = index;
+      } else {
+        p2SelectedRobotIndex = index;
+      }
+      renderRobotGrids();
+    }
+
+    function confirmStartGame() {
+      const p1Name = document.getElementById('p1-name-input').value.trim() || 'ผู้เล่น 1';
+      const p2Name = document.getElementById('p2-name-input').value.trim() || 'ผู้เล่น 2';
+
+      const r1 = ROBOT_PRESETS[p1SelectedRobotIndex];
+      const r2 = ROBOT_PRESETS[p2SelectedRobotIndex];
+
+      players = [
+        { id: 0, name: p1Name, robotName: r1.name, image: r1.image, title: r1.title, pos: 1, crystals: 0 },
+        { id: 1, name: p2Name, robotName: r2.name, image: r2.image, title: r2.title, pos: 1, crystals: 0 }
+      ];
+
+      currentTurn = 0;
+      updateHUD();
+      initBoard();
+      switchView('view-game');
+    }
+
+    function initBoard() {
+      const grid = document.getElementById('board-grid');
+      grid.innerHTML = '';
+      
+      for (let i = 1; i <= TOTAL_TILES; i++) {
+        const realm = getRealm(i);
+        const tile = document.createElement('div');
+        tile.className = `tile realm-${realm.type}`;
+        tile.id = `tile-${i}`;
+        
+        const pos = tilePositions[i - 1] || { left: 50, top: 50 };
+        tile.style.left = `${pos.left}%`;
+        tile.style.top = `${pos.top}%`;
+
+        tile.innerHTML = `<span class="tile-num">${i}</span><div class="tokens" id="tokens-${i}"></div>`;
+        grid.appendChild(tile);
+      }
+      renderTokens();
+    }
+
+    function renderTokens() {
+      for (let i = 1; i <= TOTAL_TILES; i++) {
+        const container = document.getElementById(`tokens-${i}`);
+        if (container) container.innerHTML = '';
+      }
+      players.forEach(p => {
+        const container = document.getElementById(`tokens-${p.pos}`);
+        if (container) {
+          container.innerHTML += `<div class="token-badge" title="${p.name} (${p.robotName})"><img src="${p.image}"></div>`;
+        }
+      });
+    }
+
+    function updateHUD() {
+      document.getElementById('p1-card-icon').innerHTML = `<img src="${players[0].image}">`;
+      document.getElementById('p1-card-name').innerText = players[0].name;
+      document.getElementById('p1-card-title').innerText = `${players[0].robotName} (${players[0].title})`;
+      document.getElementById('p1-crystal').innerText = players[0].crystals;
+
+      document.getElementById('p2-card-icon').innerHTML = `<img src="${players[1].image}">`;
+      document.getElementById('p2-card-name').innerText = players[1].name;
+      document.getElementById('p2-card-title').innerText = `${players[1].robotName} (${players[1].title})`;
+      document.getElementById('p2-crystal').innerText = players[1].crystals;
+
+      document.getElementById('p1-card').classList.toggle('active', currentTurn === 0);
+      document.getElementById('p2-card').classList.toggle('active', currentTurn === 1);
+      
+      const p = players[currentTurn];
+      document.getElementById('turn-display').innerHTML = `ตาของ: <img src="${p.image}" style="width:24px; height:24px; object-fit:contain;"> ${p.name} (${p.robotName})`;
+      document.getElementById('btn-roll').disabled = false;
+    }
+
+    function rollDice() {
+      document.getElementById('btn-roll').disabled = true;
+      const dice = Math.floor(Math.random() * 6) + 1;
+      document.getElementById('dice-result').innerText = `🎲 ${dice}`;
+
+      const p = players[currentTurn];
+      p.pos = Math.min(p.pos + dice, TOTAL_TILES);
+      renderTokens();
+
+      setTimeout(() => popQuestion(p.pos), 600);
+    }
+
+    function generateQuestion(tileNum) {
+      const realm = getRealm(tileNum);
+      let a, b, q, ans;
+
+      if (realm.type === 'add') {
+        a = Math.floor(Math.random() * 20) + 1; b = Math.floor(Math.random() * 20) + 1;
+        q = `${a} + ${b}`; ans = a + b;
+      } else if (realm.type === 'sub') {
+        a = Math.floor(Math.random() * 20) + 10; b = Math.floor(Math.random() * 10) + 1;
+        q = `${a} - ${b}`; ans = a - b;
+      } else if (realm.type === 'mul') {
+        a = Math.floor(Math.random() * 9) + 2; b = Math.floor(Math.random() * 9) + 2;
+        q = `${a} × ${b}`; ans = a * b;
+      } else {
+        b = Math.floor(Math.random() * 8) + 2; ans = Math.floor(Math.random() * 10) + 1;
+        a = b * ans; q = `${a} ÷ ${b}`;
+      }
+      return { realmName: realm.name, question: q, answer: ans };
+    }
+
+    function popQuestion(tileNum) {
+      currentQuestion = generateQuestion(tileNum);
+      document.getElementById('modal-realm-tag').innerText = `อาณาจักร: ${currentQuestion.realmName}`;
+      document.getElementById('q-text').innerText = `${currentQuestion.question} = ?`;
+      document.getElementById('q-answer').value = '';
+      document.getElementById('question-modal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('q-answer').focus(), 100);
+    }
+
+    function submitAnswer() {
+      const userAns = parseInt(document.getElementById('q-answer').value);
+      const p = players[currentTurn];
+
+      document.getElementById('question-modal').classList.add('hidden');
+
+      if (userAns === currentQuestion.answer) {
+        alert(`🎉 ถูกต้อง! ยูนิต ${p.robotName} ของ ${p.name} ได้รับ 10 Crystal 💎`);
+        p.crystals += 10;
+        saveScoreToHOF(p.name, p.robotName, p.crystals);
+      } else {
+        alert(`❌ คำตอบไม่ถูกต้อง! (คำตอบที่ถูกต้องคือ ${currentQuestion.answer})`);
+      }
+
+      if (p.pos >= TOTAL_TILES) {
+        alert(`🏆 ยินดีด้วย! ${p.name} (${p.robotName}) พิชิตปราสาท Zero Castle ได้สำเร็จ!`);
+        showHOF();
+        return;
+      }
+
+      currentTurn = (currentTurn + 1) % 2;
+      updateHUD();
+    }
+
+    document.getElementById('q-answer').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        submitAnswer();
+      }
+    });
+
+    function saveScoreToHOF(name, robotName, crystals) {
+      let data = JSON.parse(localStorage.getItem('math_robot_hof') || '[]');
+      const exist = data.find(d => d.name === name);
+      if (exist) { 
+        exist.crystals = Math.max(exist.crystals, crystals);
+        exist.robotName = robotName;
+      } else { 
+        data.push({ name, robotName, crystals }); 
+      }
+      data.sort((a,b) => b.crystals - a.crystals);
+      localStorage.setItem('math_robot_hof', JSON.stringify(data));
+    }
+
+    function loadHOFData() {
+      const data = JSON.parse(localStorage.getItem('math_robot_hof') || '[]');
+      
+      document.getElementById('hof-name-1').innerText = data[0] ? `${data[0].name}` : '-';
+      document.getElementById('hof-score-1').innerText = `${data[0]?.crystals || 0} 💎`;
+      document.getElementById('hof-name-2').innerText = data[1] ? `${data[1].name}` : '-';
+      document.getElementById('hof-score-2').innerText = `${data[1]?.crystals || 0} 💎`;
+      document.getElementById('hof-name-3').innerText = data[2] ? `${data[2].name}` : '-';
+      document.getElementById('hof-score-3').innerText = `${data[2]?.crystals || 0} 💎`;
+
+      const list = document.getElementById('hof-list');
+      if (data.length === 0) {
+        list.innerHTML = '<tr><td colspan="4" style="color:#94a3b8;">ยังไม่มีข้อมูลการเล่น</td></tr>';
+      } else {
+        list.innerHTML = data.slice(3, 10).map((item, idx) => `
+          <tr>
+            <td>#${idx + 4}</td>
+            <td><strong>${item.name}</strong></td>
+            <td>🤖 ${item.robotName}</td>
+            <td>${item.crystals} 💎</td>
+          </tr>
+        `).join('');
+      }
+    }
+  </script>
+</body>
+</html>
