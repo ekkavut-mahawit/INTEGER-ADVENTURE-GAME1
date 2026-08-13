@@ -237,6 +237,68 @@
     }
     @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
+    /* REALM ANNOUNCEMENT MODAL */
+    .realm-modal-card {
+      background: linear-gradient(165deg, #0f172a 0%, #1e293b 100%);
+      border: 3px solid var(--accent-gold);
+      box-shadow: 0 0 50px rgba(245, 158, 11, 0.4), inset 0 0 25px rgba(245, 158, 11, 0.2);
+      border-radius: 28px;
+      padding: 35px 25px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      animation: realmZoom 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes realmZoom {
+      0% { transform: scale(0.6) translateY(30px); opacity: 0; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .realm-icon-circle {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.8rem;
+      background: rgba(255, 255, 255, 0.08);
+      border: 2px solid var(--accent-gold);
+      box-shadow: 0 0 25px var(--accent-gold);
+      animation: pulseRealmIcon 1.5s infinite alternate ease-in-out;
+    }
+    @keyframes pulseRealmIcon {
+      0% { transform: scale(0.95); box-shadow: 0 0 15px var(--accent-gold); }
+      100% { transform: scale(1.1); box-shadow: 0 0 35px var(--accent-gold); }
+    }
+    .realm-subtitle-tag {
+      display: inline-block;
+      padding: 4px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--accent-gold);
+      border: 1px solid var(--accent-gold);
+    }
+    .realm-main-title {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #ffffff;
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+      margin-bottom: 10px;
+      letter-spacing: 1px;
+    }
+    .realm-desc-text {
+      font-size: 1rem;
+      color: #cbd5e1;
+      line-height: 1.5;
+      margin-bottom: 25px;
+    }
+
     /* SHOP STYLES */
     .shop-modal-card { width: 620px; text-align: left; }
     .shop-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 12px; }
@@ -539,6 +601,17 @@
     </div>
   </div>
 
+  <!-- REALM TRANSITION ANNOUNCEMENT MODAL -->
+  <div id="realm-announcement-modal" class="modal hidden">
+    <div id="realm-modal-card" class="modal-card realm-modal-card">
+      <span class="realm-subtitle-tag">⚡ REALM UNLOCKED ⚡</span>
+      <div id="realm-icon-circle" class="realm-icon-circle">➕</div>
+      <h2 id="realm-main-title" class="realm-main-title">เข้าสู่ด่านการบวก</h2>
+      <p id="realm-desc-text" class="realm-desc-text">ยินดีต้อนรับสู่สมรภูมิการบวก!</p>
+      <button id="btn-enter-realm" onclick="confirmEnterRealm()" class="btn-submit" style="background: linear-gradient(135deg, var(--accent-gold), #d97706); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);">⚔️ เข้าสู่การแข่งขัน!</button>
+    </div>
+  </div>
+
   <!-- SHOP MODAL -->
   <div id="shop-modal" class="modal hidden">
     <div class="modal-card shop-modal-card">
@@ -749,10 +822,40 @@
     }
 
     function getRealm(tileNum) {
-      if (tileNum <= 12) return { name: 'บวก (Addition)', type: 'add', icon: '➕' };
-      if (tileNum <= 22) return { name: 'ลบ (Subtraction)', type: 'sub', icon: '➖' };
-      if (tileNum <= 34) return { name: 'คูณ (Multiplication)', type: 'mul', icon: '✖️' };
-      return { name: 'หาร (Division)', type: 'div', icon: '➗' };
+      if (tileNum <= 12) {
+        return { 
+          name: 'ด่านการบวก (Addition Realm)', 
+          type: 'add', 
+          icon: '➕', 
+          color: 'var(--accent-cyan)',
+          desc: 'ยินดีต้อนรับสู่สมรภูมิการบวก! รวมพลังงานประจุบวกเพื่อสะสมพลังรบทะยานสู่อนาคต'
+        };
+      }
+      if (tileNum <= 22) {
+        return { 
+          name: 'ด่านการลบ (Subtraction Realm)', 
+          type: 'sub', 
+          icon: '➖', 
+          color: 'var(--accent-orange)',
+          desc: 'เข้าสู่เขตแดนการลบ! หักล้างศัตรู ฝ่าฟันพลังงานด้านลบเพื่อรักษาสมดุลยูนิต'
+        };
+      }
+      if (tileNum <= 34) {
+        return { 
+          name: 'ด่านการคูณ (Multiplication Realm)', 
+          type: 'mul', 
+          icon: '✖️', 
+          color: 'var(--accent-purple)',
+          desc: 'เข้าสู่มิติด่านการคูณ! ทวีคูณความเร็วและพลังงานคริสตัลสู่ระดับขีดสุด'
+        };
+      }
+      return { 
+        name: 'ด่านการหาร (Division Realm)', 
+        type: 'div', 
+        icon: '➗', 
+        color: 'var(--accent-green)',
+        desc: 'ด่านสุดท้ายการหาร! จัดสรรสติปัญญารับมือโจทย์สุดท้าทาย เพื่อพิชิต Zero Castle!'
+      };
     }
 
     function switchView(viewId) {
@@ -1055,8 +1158,9 @@
     function triggerRollDice() {
       if (myRole !== roomData.currentTurn || roomData.phase !== 'idle' || isAnimatingDice) return;
 
+      const prevPos = roomData.players[myRole].pos;
       const outcome = Math.floor(Math.random() * 6) + 1;
-      const nextPos = Math.min(roomData.players[myRole].pos + outcome, TOTAL_TILES);
+      const nextPos = Math.min(prevPos + outcome, TOTAL_TILES);
 
       db.ref(`rooms/${currentRoomCode}`).update({
         phase: 'rolling',
@@ -1067,7 +1171,18 @@
       animate3DDice(outcome, () => {
         if (myRole === roomData.currentTurn) {
           db.ref(`rooms/${currentRoomCode}/players/${myRole}`).update({ pos: nextPos }).then(() => {
-            popQuestion(nextPos);
+            const prevRealm = getRealm(prevPos);
+            const nextRealm = getRealm(nextPos);
+
+            // ตรวจสอบว่าข้ามด่านใหม่หรือไม่
+            if (prevRealm.type !== nextRealm.type) {
+              db.ref(`rooms/${currentRoomCode}`).update({
+                phase: 'realm_intro',
+                pendingTileNum: nextPos
+              });
+            } else {
+              popQuestion(nextPos);
+            }
           });
         }
       });
@@ -1102,30 +1217,103 @@
     // ----------------------------------------------------
     // 5. QUESTION & MODALS SYNC
     // ----------------------------------------------------
+    const questionPool = {
+      add: {
+        easy: [
+          { question: '(-7) + 12', answer: 5 },
+          { question: '15 + (-9)', answer: 6 },
+          { question: '(-8) + (-6)', answer: -14 },
+          { question: '(-13) + 7', answer: -6 }
+        ],
+        hard: [
+          { question: '(-12) + 7 + (-5)', answer: -10 },
+          { question: '18 + (-25) + 9', answer: 2 }
+        ],
+        duel: [
+          { question: '(-16) + (-7) + 20', answer: -3 }
+        ]
+      },
+      sub: {
+        easy: [
+          { question: '9 - (-4)', answer: 13 },
+          { question: '(-6) - 8', answer: -14 },
+          { question: '7 - 12', answer: -5 }
+        ],
+        hard: [
+          { question: '(-10) - (-3)', answer: -7 },
+          { question: '(-8) - (-15)', answer: 7 }
+        ],
+        duel: [
+          { question: '14 - (-6) - 9', answer: 11 },
+          { question: '(-5) - 7 - (-4)', answer: -8 }
+        ]
+      },
+      mul: {
+        easy: [
+          { question: '(-6) × 4', answer: -24 },
+          { question: '(-7) × (-3)', answer: 21 },
+          { question: '5 × (-8)', answer: -40 },
+          { question: '(-9) × (-2)', answer: 18 }
+        ],
+        hard: [
+          { question: '(-3) × (-4) × 2', answer: 24 },
+          { question: '2 × (-7) × 3', answer: -42 }
+        ],
+        duel: [
+          { question: '(-5) × 6 × (-2)', answer: 60 },
+          { question: '(-2) × (-3) × (-4)', answer: -24 }
+        ]
+      },
+      div: {
+        easy: [
+          { question: '(-36) ÷ 9', answer: -4 },
+          { question: '(-42) ÷ (-7)', answer: 6 },
+          { question: '56 ÷ (-8)', answer: -7 },
+          { question: '(-63) ÷ 9', answer: -7 }
+        ],
+        hard: [
+          { question: '(-48) ÷ (-6) + (-5)', answer: 3 },
+          { question: '(-72) ÷ 8 + 4', answer: -5 }
+        ],
+        duel: [
+          { question: '54 ÷ (-9) - 2', answer: -8 },
+          { question: '(-84) ÷ (-7) + (-3)', answer: 9 }
+        ]
+      }
+    };
+
     function generateQuestion(tileNum, difficulty = 'normal') {
       const realm = getRealm(tileNum);
-      let a, b, q, ans;
+      const pool = questionPool[realm.type];
+      let questions = [];
 
-      if (realm.type === 'add') {
-        let max = difficulty === 'easy' ? 10 : (difficulty === 'hard' ? 35 : (difficulty === 'duel' ? 60 : 20));
-        a = Math.floor(Math.random() * max) + 1; b = Math.floor(Math.random() * max) + 1;
-        q = `${a} + ${b}`; ans = a + b;
-      } else if (realm.type === 'sub') {
-        let max = difficulty === 'easy' ? 15 : (difficulty === 'hard' ? 40 : (difficulty === 'duel' ? 70 : 20));
-        a = Math.floor(Math.random() * max) + 10; b = Math.floor(Math.random() * (a - 1)) + 1;
-        q = `${a} - ${b}`; ans = a - b;
-      } else if (realm.type === 'mul') {
-        let maxA = difficulty === 'easy' ? 5 : (difficulty === 'hard' ? 12 : (difficulty === 'duel' ? 18 : 9));
-        let maxB = difficulty === 'easy' ? 5 : (difficulty === 'hard' ? 12 : (difficulty === 'duel' ? 18 : 9));
-        a = Math.floor(Math.random() * maxA) + 2; b = Math.floor(Math.random() * maxB) + 2;
-        q = `${a} × ${b}`; ans = a * b;
-      } else { 
-        let maxAns = difficulty === 'easy' ? 6 : (difficulty === 'hard' ? 15 : (difficulty === 'duel' ? 25 : 10));
-        let maxB = difficulty === 'easy' ? 5 : (difficulty === 'hard' ? 12 : (difficulty === 'duel' ? 15 : 8));
-        b = Math.floor(Math.random() * maxB) + 2; ans = Math.floor(Math.random() * maxAns) + 1;
-        a = b * ans; q = `${a} ÷ ${b}`;
+      if (difficulty === 'easy') {
+        questions = pool.easy;
+      } else if (difficulty === 'hard') {
+        questions = pool.hard;
+      } else if (difficulty === 'duel') {
+        questions = pool.duel;
+      } else {
+        questions = [...pool.easy, ...pool.hard, ...pool.duel];
       }
-      return { realmName: realm.name, realmIcon: realm.icon, question: q, answer: ans };
+
+      if (!questions || questions.length === 0) {
+        questions = [...pool.easy, ...pool.hard, ...pool.duel];
+      }
+
+      const item = questions[Math.floor(Math.random() * questions.length)];
+      return {
+        realmName: realm.name,
+        realmIcon: realm.icon,
+        question: item.question,
+        answer: item.answer
+      };
+    }
+
+    function confirmEnterRealm() {
+      if (myRole !== roomData.currentTurn) return;
+      const targetTile = roomData.pendingTileNum || roomData.players[myRole].pos;
+      popQuestion(targetTile);
     }
 
     function popQuestion(tileNum) {
@@ -1173,10 +1361,34 @@
 
     function syncModalPhase() {
       const modal = document.getElementById('question-modal');
+      const realmModal = document.getElementById('realm-announcement-modal');
       const choiceView = document.getElementById('modal-choice-view');
       const questionView = document.getElementById('modal-question-view');
       const resultView = document.getElementById('modal-result-view');
       const isMyTurn = (myRole === roomData.currentTurn);
+
+      // Phase: Realm Intro (หน้าต่างต้อนรับเข้าสู่ด่าน)
+      if (roomData.phase === 'realm_intro') {
+        modal.classList.add('hidden');
+        realmModal.classList.remove('hidden');
+
+        const currentPos = roomData.pendingTileNum || roomData.players[roomData.currentTurn].pos;
+        const realm = getRealm(currentPos);
+
+        document.getElementById('realm-icon-circle').innerText = realm.icon;
+        document.getElementById('realm-icon-circle').style.borderColor = realm.color;
+        document.getElementById('realm-icon-circle').style.boxShadow = `0 0 30px ${realm.color}`;
+        document.getElementById('realm-main-title').innerText = realm.name;
+        document.getElementById('realm-main-title').style.color = realm.color;
+        document.getElementById('realm-desc-text').innerText = realm.desc;
+
+        const btnEnter = document.getElementById('btn-enter-realm');
+        btnEnter.disabled = !isMyTurn;
+        btnEnter.style.background = `linear-gradient(135deg, ${realm.color}, #0f172a)`;
+
+      } else {
+        realmModal.classList.add('hidden');
+      }
 
       if (roomData.phase === 'choice') {
         modal.classList.remove('hidden');
@@ -1247,7 +1459,7 @@
 
         document.getElementById('btn-next-turn').disabled = !isMyTurn;
 
-      } else {
+      } else if (roomData.phase === 'idle') {
         modal.classList.add('hidden');
         clearInterval(timerInterval);
       }
@@ -1381,6 +1593,7 @@
       const winner = data.players ? data.players[winnerId] : null;
 
       document.getElementById('question-modal').classList.add('hidden');
+      document.getElementById('realm-announcement-modal').classList.add('hidden');
       document.getElementById('shop-modal').classList.add('hidden');
 
       if (winner) {
@@ -1472,10 +1685,22 @@
       if (p.inventory[itemId] > 0) {
         if (itemId === 'warpBoost') {
           p.inventory.warpBoost--;
+          const prevPos = p.pos;
           p.pos = Math.min(p.pos + 3, TOTAL_TILES);
           db.ref(`rooms/${currentRoomCode}/players/${playerIndex}`).set(p).then(() => {
             alert(`🚀 ${p.name} ใช้เทอร์โบบูสต์! เดินหน้าเพิ่ม 3 ช่องทันที`);
-            popQuestion(p.pos);
+            const prevRealm = getRealm(prevPos);
+            const nextRealm = getRealm(p.pos);
+
+            // ตรวจสอบว่าข้ามด่านด้วยการวาร์ปหรือไม่
+            if (prevRealm.type !== nextRealm.type) {
+              db.ref(`rooms/${currentRoomCode}`).update({
+                phase: 'realm_intro',
+                pendingTileNum: p.pos
+              });
+            } else {
+              popQuestion(p.pos);
+            }
           });
         } else if (itemId === 'timeExtender') {
           if (!p.activeBuffs.timeExtender) {
