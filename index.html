@@ -160,14 +160,40 @@
     }
 
     .tile-num { position: absolute; top: 22px; font-weight: bold; color: #ffffff; font-size: 1rem; text-shadow: 0 1px 3px black, 0 0 5px rgba(0,0,0,0.8); pointer-events: none; }
-    .tokens { display: flex; gap: 3px; font-size: 1.25rem; margin-top: 8px; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.9)); z-index: 5; }
+
+    /* ----------------------------------------------------------------- */
+    /* 🤖 ปรับปรุงการแสดงผลรูปหุ่นยนต์บนกระดานให้ใหญ่ขึ้น เรืองแสงสดใสเต็มตัว */
+    /* ----------------------------------------------------------------- */
+    .tokens { 
+      position: absolute; top: -35px; display: flex; gap: 2px; justify-content: center; align-items: center; z-index: 20; pointer-events: none; 
+    }
 
     .token-badge {
-      display: inline-flex; align-items: center; justify-content: center; width: 35px; height: 35px; border-radius: 50%;
-      background: rgba(15, 23, 42, 0.85); border: 2px solid var(--accent-gold); overflow: hidden; animation: bounce 0.4s ease infinite alternate;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 58px; height: 68px;
+      border-radius: 0; background: transparent; border: none;
+      overflow: visible; animation: bounce 0.5s ease infinite alternate;
+      position: relative;
     }
-    .token-badge img { width: 100%; height: 100%; object-fit: contain; }
-    @keyframes bounce { 0% { transform: translateY(0); } 100% { transform: translateY(-4px); } }
+
+    .token-badge img { 
+      width: 100%; height: 100%; object-fit: contain; 
+      filter: drop-shadow(0 0 8px var(--accent-gold)) drop-shadow(0 0 15px rgba(245, 158, 11, 0.8)) drop-shadow(0 0 3px #ffffff);
+      transition: all 0.3s ease;
+    }
+
+    .token-badge.p1-token img {
+      filter: drop-shadow(0 0 8px var(--accent-cyan)) drop-shadow(0 0 18px rgba(6, 182, 212, 0.95)) drop-shadow(0 0 4px #ffffff);
+    }
+
+    .token-badge.p2-token img {
+      filter: drop-shadow(0 0 8px var(--accent-orange)) drop-shadow(0 0 18px rgba(249, 115, 22, 0.95)) drop-shadow(0 0 4px #ffffff);
+    }
+
+    @keyframes bounce { 
+      0% { transform: translateY(0); } 
+      100% { transform: translateY(-6px); } 
+    }
 
     /* Sidebar HUD */
     .hud { display: flex; flex-direction: column; gap: 15px; }
@@ -935,8 +961,8 @@
     // 2. GAME STATE & CONSTANTS
     // ----------------------------------------------------
     const QUESTION_TIME_LIMIT = 15;
-    const SPECIAL_TILES = [9, 16, 18, 27, 29,36]; 
-    const CHALLENGE_TILES = [4, 7, 15, 25, 32,39];
+    const SPECIAL_TILES = [9, 16, 18, 27, 29, 36]; 
+    const CHALLENGE_TILES = [4, 7, 15, 25, 32, 39];
     const BASE_CRYSTAL_REWARD = 10;   
     const TOTAL_TILES = 42;
 
@@ -1218,16 +1244,16 @@
       const p1 = roomData.players[0];
       const p2 = roomData.players[1];
 
-      // Update Players Tokens
+      // Update Players Tokens on Board
       for (let i = 1; i <= TOTAL_TILES; i++) {
         const container = document.getElementById(`tokens-${i}`);
         if (container) container.innerHTML = '';
       }
-      [p1, p2].forEach(p => {
+      [p1, p2].forEach((p, idx) => {
         if (p) {
           const container = document.getElementById(`tokens-${p.pos}`);
           if (container) {
-            container.innerHTML += `<div class="token-badge" title="${p.name} (${p.robotName})"><img src="${p.image}"></div>`;
+            container.innerHTML += `<div class="token-badge p${idx + 1}-token" title="${p.name} (${p.robotName})"><img src="${p.image}"></div>`;
           }
         }
       });
@@ -1864,11 +1890,11 @@
       if (data.length === 0) {
         list.innerHTML = '<tr><td colspan="4" style="color:#94a3b8;">ยังไม่มีข้อมูลการเล่น</td></tr>';
       } else {
-        list.innerHTML = data.slice(3, 10).map((item, idx) => `
+        list.innerHTML = data.slice(3, 10).map((item, index) => `
           <tr>
-            <td>#${idx + 4}</td>
-            <td><strong>${item.name}</strong></td>
-            <td>🤖 ${item.robotName}</td>
+            <td>${index + 4}</td>
+            <td>${item.name}</td>
+            <td>${item.robotName}</td>
             <td>${item.crystals} 💎</td>
           </tr>
         `).join('');
