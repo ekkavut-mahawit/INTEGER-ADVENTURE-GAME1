@@ -44,6 +44,7 @@
     .menu-btn.create { background: linear-gradient(135deg, var(--accent-green), #047857); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }
     .menu-btn.join { background: linear-gradient(135deg, var(--accent-orange), #c2410c); box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4); }
     .menu-btn.spectate { background: linear-gradient(135deg, var(--accent-cyan), #0284c7); box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4); }
+    .menu-btn.shop { background: linear-gradient(135deg, var(--accent-pink), #be185d); box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4); }
     .menu-btn.hof { background: linear-gradient(135deg, var(--accent-purple), #6d28d9); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4); }
 
     /* Room Setup UI */
@@ -80,7 +81,7 @@
     }
     .robot-card:hover { border-color: var(--accent-gold); transform: translateY(-4px); }
 
-    .robot-icon { display: flex; justify-content: center; align-items: center; min-height: 55px; margin-bottom: 8px; overflow: visible; }
+    .robot-icon { display: flex; justify-content: center; align-items: center; min-height: 55px; margin-bottom: 8px; font-size: 2.2rem; }
     .robot-icon img { width: 44px; height: 44px; object-fit: contain; transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
     .robot-name { font-size: 0.8rem; font-weight: bold; color: #e2e8f0; display: block; margin-top: 4px; }
     .robot-desc { font-size: 0.68rem; color: #94a3b8; display: block; margin-top: 2px; }
@@ -90,14 +91,14 @@
       box-shadow: 0 0 25px rgba(6, 182, 212, 0.7), inset 0 0 12px rgba(6, 182, 212, 0.4); 
       transform: translateY(-2px); z-index: 10;
     }
-    .p1-box .robot-card.selected .robot-icon img { transform: scale(3) translateY(-8px); filter: drop-shadow(0 0 14px var(--accent-cyan)) drop-shadow(0 0 4px #ffffff); }
+    .p1-box .robot-card.selected .robot-icon img { transform: scale(2.2) translateY(-4px); filter: drop-shadow(0 0 14px var(--accent-cyan)) drop-shadow(0 0 4px #ffffff); }
 
     .p2-box .robot-card.selected { 
       border-color: var(--accent-orange); background: rgba(249, 115, 22, 0.18); 
       box-shadow: 0 0 25px rgba(249, 115, 22, 0.7), inset 0 0 12px rgba(249, 115, 22, 0.4); 
       transform: translateY(-2px); z-index: 10;
     }
-    .p2-box .robot-card.selected .robot-icon img { transform: scale(3) translateY(-8px); filter: drop-shadow(0 0 14px var(--accent-orange)) drop-shadow(0 0 4px #ffffff); }
+    .p2-box .robot-card.selected .robot-icon img { transform: scale(2.2) translateY(-4px); filter: drop-shadow(0 0 14px var(--accent-orange)) drop-shadow(0 0 4px #ffffff); }
 
     .start-battle-btn { display: block; width: 100%; max-width: 320px; margin: 0 auto; padding: 16px; font-size: 1.3rem; background: linear-gradient(135deg, #10b981, #059669); color: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); text-transform: uppercase; letter-spacing: 1px; }
 
@@ -116,6 +117,7 @@
     
     .board-frame { 
       position: relative; width: 100%; aspect-ratio: 45.68 / 42.86; 
+      background-color: #1e293b;
       background-image: url('board.png'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; 
       border-radius: 16px; border: 3px solid #334155; overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
     }
@@ -123,8 +125,8 @@
     .board-grid { position: relative; width: 100%; height: 100%; }
 
     .tile { 
-      position: absolute; width: 10%; height: 10%; transform: translate(-50%, -50%); 
-      display: flex; flex-direction: column; align-items: center; justify-content: center; background: transparent; border-radius: 50%; border: none;
+      position: absolute; width: 9%; height: 9%; transform: translate(-50%, -50%); 
+      display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(30, 41, 59, 0.7); border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);
     }
 
     .tile.special-tile {
@@ -159,12 +161,12 @@
       100% { transform: translate(-50%, -50%) scale(1.15); box-shadow: 0 0 25px rgba(236, 72, 153, 1), inset 0 0 12px rgba(255, 255, 255, 0.8); }
     }
 
-    .tile-num { position: absolute; top: 22px; font-weight: bold; color: #ffffff; font-size: 1rem; text-shadow: 0 1px 3px black, 0 0 5px rgba(0,0,0,0.8); pointer-events: none; }
-    .tokens { display: flex; gap: 3px; font-size: 1.25rem; margin-top: 8px; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.9)); z-index: 5; }
+    .tile-num { position: absolute; top: 2px; font-weight: bold; color: #ffffff; font-size: 0.85rem; text-shadow: 0 1px 3px black, 0 0 5px rgba(0,0,0,0.8); pointer-events: none; }
+    .tokens { display: flex; gap: 3px; font-size: 1.25rem; margin-top: 10px; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.9)); z-index: 5; }
 
     .token-badge {
-      display: inline-flex; align-items: center; justify-content: center; width: 35px; height: 35px; border-radius: 50%;
-      background: rgba(15, 23, 42, 0.85); border: 2px solid var(--accent-gold); overflow: hidden; animation: bounce 0.4s ease infinite alternate;
+      display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(15, 23, 42, 0.85); border: 2px solid var(--accent-gold); overflow: hidden; animation: bounce 0.4s ease infinite alternate; font-size: 1.1rem;
     }
     .token-badge img { width: 100%; height: 100%; object-fit: contain; }
     @keyframes bounce { 0% { transform: translateY(0); } 100% { transform: translateY(-4px); } }
@@ -177,11 +179,11 @@
     .player-card.active { border-color: var(--accent-gold); background: rgba(245, 158, 11, 0.12); box-shadow: 0 0 15px rgba(245, 158, 11, 0.3); }
     
     .player-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
-    .player-card-icon { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; overflow: visible; }
+    .player-card-icon { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; overflow: visible; font-size: 1.8rem; }
     .player-card-icon img { width: 40px; height: 40px; object-fit: contain; transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
 
-    #p1-card.active .player-card-icon img { transform: scale(2); filter: drop-shadow(0 0 10px var(--accent-cyan)) drop-shadow(0 0 3px #ffffff); }
-    #p2-card.active .player-card-icon img { transform: scale(2); filter: drop-shadow(0 0 10px var(--accent-orange)) drop-shadow(0 0 3px #ffffff); }
+    #p1-card.active .player-card-icon img { transform: scale(1.5); filter: drop-shadow(0 0 10px var(--accent-cyan)) drop-shadow(0 0 3px #ffffff); }
+    #p2-card.active .player-card-icon img { transform: scale(1.5); filter: drop-shadow(0 0 10px var(--accent-orange)) drop-shadow(0 0 3px #ffffff); }
 
     .player-card-name { font-weight: bold; font-size: 1rem; color: #f8fafc; }
     .player-card-title { font-size: 0.75rem; color: var(--accent-cyan); display: block; }
@@ -374,20 +376,20 @@
     @keyframes shockwave { 0% { transform: scale(0.2); opacity: 1; stroke-width: 6; } 100% { transform: scale(1.6); opacity: 0; stroke-width: 1; } }
     
     /* 📱 CSS ปรับแต่งเพิ่มเติมสำหรับหน้าจอมือถือ */
+    @media (max-width: 850px) {
+      .game-layout { grid-template-columns: 1fr; }
+      .char-select-grid { grid-template-columns: 1fr; }
+      .robot-grid { grid-template-columns: repeat(3, 1fr); }
+    }
     @media (max-width: 640px) {
-        .game-board {
-            transform: scale(0.9);
-            transform-origin: top center;
-        }
-        
-        .modal-content {
-            width: 95% !important;
-            padding: 1rem !important;
-        }
-        
-        .dice-container {
-            scale: 0.8;
-        }
+      body { padding: 10px; }
+      .view { padding: 15px; }
+      .menu-title { font-size: 2rem; }
+      .menu-btn { width: 100%; max-width: 280px; }
+      .robot-grid { grid-template-columns: repeat(2, 1fr); }
+      .board-frame { aspect-ratio: 1 / 1; }
+      .modal-card { padding: 20px; width: 95% !important; }
+      .shop-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -396,8 +398,7 @@
   <!-- 1. MAIN MENU VIEW -->
   <div id="view-menu" class="view">
     <div class="menu-container">
-      <!-- เพิ่มรูปโลโก้ตรงกลาง ด้านบนสุด -->
-      <img src="logo.png" alt="Logo" style="display: block; margin: 0 auto 20px auto; max-width: 220px; height: auto;">
+      <img src="logo.png" alt="Logo" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%23f59e0b\'><text y=\'50%\' x=\'50%\' dominant-baseline=\'central\' text-anchor=\'middle\' font-size=\'60\'>⚔️</text></svg>';" style="display: block; margin: 0 auto 20px auto; max-width: 220px; height: auto;">
       <h1 class="menu-title">⚔️ INTEGER ADVENTURE ⚔️</h1>
       <p class="menu-subtitle">🤖 ศึกสงครามหุ่นนักรบ พิชิตอาณาจักรจำนวนเต็ม (ระบบเล่น 2 เครื่อง)</p>
       
@@ -491,7 +492,7 @@
           
           <div id="p1-card" class="player-card active">
             <div class="player-card-header">
-              <span id="p1-card-icon" class="player-card-icon"></span>
+              <span id="p1-card-icon" class="player-card-icon">🤖</span>
               <div>
                 <span id="p1-card-name" class="player-card-name">ผู้เล่น 1</span>
                 <span id="p1-card-title" class="player-card-title">TITAN-01</span>
@@ -503,7 +504,7 @@
 
           <div id="p2-card" class="player-card">
             <div class="player-card-header">
-              <span id="p2-card-icon" class="player-card-icon"></span>
+              <span id="p2-card-icon" class="player-card-icon">🦾</span>
               <div>
                 <span id="p2-card-name" class="player-card-name">ผู้เล่น 2</span>
                 <span id="p2-card-title" class="player-card-title">MECHA-REX</span>
@@ -601,7 +602,7 @@
         <div id="timer-box" class="timer-container">
           <div class="timer-info">
             <span>⏱️ เวลาในการตอบ:</span>
-            <span class="timer-count-badge"><span id="timer-count">5</span> วินาที</span>
+            <span class="timer-count-badge"><span id="timer-count">10</span> วินาที</span>
           </div>
           <div class="timer-progress-bg">
             <div id="timer-bar" class="timer-progress-bar"></div>
@@ -646,7 +647,7 @@
     </div>
   </div>
 
-  <!-- 🏆 5. END GAME / VICTORY MODAL (เพิ่มระบบจบเกมสมบูรณ์) -->
+  <!-- 🏆 5. END GAME / VICTORY MODAL -->
   <div id="victory-modal" class="modal hidden">
     <div class="modal-card" style="border-color: var(--accent-gold); box-shadow: 0 0 45px rgba(245, 158, 11, 0.7);">
       <div style="font-size: 3.5rem; margin-bottom: 8px;">👑</div>
@@ -701,12 +702,12 @@
     ];
 
     const ROBOT_PRESETS = [
-      { id: 'titan', name: 'TITAN-01', image: 'images/titan.png', desc: 'สายถึกเกราะเหล็ก', title: 'ไททันเหล็กกล้า' },
-      { id: 'mecha', name: 'MECHA-REX', image: 'images/mecha.png', desc: 'หมัดเหล็กจอมทำลาย', title: 'จักรกลหมัดเหล็ก' },
-      { id: 'cyber', name: 'CYBER-SPARK', image: 'images/cyber.png', desc: 'พลังงานพลาสม่า', title: 'ไซเบอร์พลาสม่า' },
-      { id: 'aegis', name: 'AEGIS-PRIME', image: 'images/aegis.png', desc: 'โล่พลังงานไร้พ่าย', title: 'เอจิสเกราะหนัก' },
-      { id: 'magma', name: 'MAGMA-CORE', image: 'images/magma.png', desc: 'หุ่นหลอมเหลวความร้อน', title: 'แมกมาคอร์' },
-      { id: 'chrono', name: 'CHRONO-MECH', image: 'images/chrono.png', desc: 'จักรกลข้ามมิติเวลา', title: 'โครโนเมกะ' }
+      { id: 'titan', name: 'TITAN-01', image: 'images/titan.png', fallback: '🤖', desc: 'สายถึกเกราะเหล็ก', title: 'ไททันเหล็กกล้า' },
+      { id: 'mecha', name: 'MECHA-REX', image: 'images/mecha.png', fallback: '🦾', desc: 'หมัดเหล็กจอมทำลาย', title: 'จักรกลหมัดเหล็ก' },
+      { id: 'cyber', name: 'CYBER-SPARK', image: 'images/cyber.png', fallback: '⚡', desc: 'พลังงานพลาสม่า', title: 'ไซเบอร์พลาสม่า' },
+      { id: 'aegis', name: 'AEGIS-PRIME', image: 'images/aegis.png', fallback: '🛡️', desc: 'โล่พลังงานไร้พ่าย', title: 'เอจิสเกราะหนัก' },
+      { id: 'magma', name: 'MAGMA-CORE', image: 'images/magma.png', fallback: '🔥', desc: 'หุ่นหลอมเหลวความร้อน', title: 'แมกมาคอร์' },
+      { id: 'chrono', name: 'CHRONO-MECH', image: 'images/chrono.png', fallback: '⏳', desc: 'จักรกลข้ามมิติเวลา', title: 'โครโนเมกะ' }
     ];
 
     const tilePositions = [
@@ -738,9 +739,14 @@
     let currentRotX = -22;
     let currentRotY = -35;
     let isFromMainMenuShop = false;
+    let isAnimatingDice = false;
 
     const FIREWORKS_SVG = `<svg class="firework-svg" viewBox="0 0 100 100"><g class="firework-spark"><circle cx="50" cy="10" r="3.5" fill="#f59e0b" /><circle cx="85" cy="25" r="3" fill="#10b981" /><circle cx="90" cy="50" r="3.5" fill="#06b6d4" /><circle cx="80" cy="80" r="4" fill="#3b82f6" /><circle cx="50" cy="90" r="3.5" fill="#ec4899" /><circle cx="20" cy="80" r="3" fill="#8b5cf6" /><circle cx="10" cy="50" r="3.5" fill="#f97316" /><circle cx="20" cy="20" r="4" fill="#facc15" /><line x1="50" y1="50" x2="50" y2="18" stroke="#f59e0b" stroke-width="2" stroke-dasharray="2" /><line x1="50" y1="50" x2="78" y2="28" stroke="#10b981" stroke-width="2" stroke-dasharray="2" /><line x1="50" y1="50" x2="82" y2="50" stroke="#06b6d4" stroke-width="2" stroke-dasharray="2" /><line x1="50" y1="50" x2="72" y2="72" stroke="#3b82f6" stroke-width="2" stroke-dasharray="2" /><line x1="50" y1="50" x2="50" y2="82" stroke="#ec4899" stroke-width="2" stroke-dasharray="2" /><line x1="50" y1="50" x2="28" y2="72" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="2" /><line x1="50" y1="50" x2="18" y2="50" stroke="#f97316" stroke-width="2" stroke-dasharray="2" /><line x1="50" y1="50" x2="28" y2="28" stroke="#facc15" stroke-width="2" stroke-dasharray="2" /></g><polygon class="firework-star" points="50,38 53,46 62,47 55,53 57,62 50,57 43,62 45,53 38,47 47,46" fill="#ffffff" /></svg>`;
     const EXPLOSION_SVG = `<svg class="explosion-svg" viewBox="0 0 100 100"><circle class="exp-shockwave" cx="50" cy="50" r="35" fill="none" stroke="#ef4444" /><g class="exp-blast"><polygon class="exp-flame" points="50,10 62,35 90,25 72,50 88,78 58,68 50,92 38,68 12,80 26,50 10,25 38,35" fill="#f97316" /><polygon class="exp-flame" points="50,22 58,40 76,32 64,50 74,68 55,60 50,78 42,60 24,68 34,50 22,32 40,40" fill="#facc15" style="animation-delay: 0.2s;" /><circle cx="50" cy="50" r="14" fill="#ffffff" /></g></svg>`;
+
+    function getRobotAvatarHtml(imagePath, fallbackEmoji) {
+      return `<img src="${imagePath}" alt="Robot" onerror="this.onerror=null; this.parentNode.innerHTML='${fallbackEmoji}';">`;
+    }
 
     function getRealm(tileNum) {
       if (tileNum <= 12) return { name: 'บวก (Addition)', type: 'add', icon: '➕' };
@@ -757,6 +763,7 @@
     function showMenu() { 
       document.getElementById('victory-modal').classList.add('hidden');
       if (roomRef) roomRef.off(); 
+      currentRoomCode = null;
       switchView('view-menu'); 
     }
 
@@ -780,8 +787,8 @@
         phase: 'idle',
         multiplier: 1,
         players: {
-          0: { id: 0, name: 'นักรบสปาร์ก', robotName: r1.name, image: r1.image, title: r1.title, pos: 1, crystals: 50, inventory: { shield: 0, timeExtender: 0, doubleCrystal: 0, warpBoost: 0 }, activeBuffs: { timeExtender: false, doubleCrystal: false }, connected: true },
-          1: { id: 1, name: 'จักรกลไซบอร์ก', robotName: r2.name, image: r2.image, title: r2.title, pos: 1, crystals: 50, inventory: { shield: 0, timeExtender: 0, doubleCrystal: 0, warpBoost: 0 }, activeBuffs: { timeExtender: false, doubleCrystal: false }, connected: false }
+          0: { id: 0, name: 'นักรบสปาร์ก', robotName: r1.name, image: r1.image, fallback: r1.fallback, title: r1.title, pos: 1, crystals: 50, inventory: { shield: 0, timeExtender: 0, doubleCrystal: 0, warpBoost: 0 }, activeBuffs: { timeExtender: false, doubleCrystal: false }, connected: true },
+          1: { id: 1, name: 'จักรกลไซบอร์ก', robotName: r2.name, image: r2.image, fallback: r2.fallback, title: r2.title, pos: 1, crystals: 50, inventory: { shield: 0, timeExtender: 0, doubleCrystal: 0, warpBoost: 0 }, activeBuffs: { timeExtender: false, doubleCrystal: false }, connected: false }
         }
       };
 
@@ -864,10 +871,10 @@
         document.getElementById('p2-name-input').disabled = (myRole !== 1);
         document.getElementById('btn-start-game').style.display = (myRole === 0) ? 'block' : 'none';
 
-        if (roomData.players[0]) {
+        if (roomData.players && roomData.players[0]) {
           document.getElementById('p1-name-input').value = roomData.players[0].name;
         }
-        if (roomData.players[1]) {
+        if (roomData.players && roomData.players[1]) {
           document.getElementById('p2-name-input').value = roomData.players[1].name;
         }
 
@@ -892,13 +899,13 @@
         const p1Name = document.getElementById('p1-name-input').value.trim() || 'ผู้เล่น 1';
         const r1 = ROBOT_PRESETS[p1SelectedRobotIndex];
         db.ref(`rooms/${currentRoomCode}/players/0`).update({
-          name: p1Name, robotName: r1.name, image: r1.image, title: r1.title
+          name: p1Name, robotName: r1.name, image: r1.image, fallback: r1.fallback, title: r1.title
         });
       } else if (myRole === 1) {
         const p2Name = document.getElementById('p2-name-input').value.trim() || 'ผู้เล่น 2';
         const r2 = ROBOT_PRESETS[p2SelectedRobotIndex];
         db.ref(`rooms/${currentRoomCode}/players/1`).update({
-          name: p2Name, robotName: r2.name, image: r2.image, title: r2.title
+          name: p2Name, robotName: r2.name, image: r2.image, fallback: r2.fallback, title: r2.title
         });
       }
     }
@@ -909,7 +916,7 @@
 
       p1Grid.innerHTML = ROBOT_PRESETS.map((r, idx) => `
         <div class="robot-card ${idx === p1SelectedRobotIndex ? 'selected' : ''}" onclick="selectRobot(0, ${idx})">
-          <span class="robot-icon"><img src="${r.image}" alt="${r.name}"></span>
+          <span class="robot-icon">${getRobotAvatarHtml(r.image, r.fallback)}</span>
           <span class="robot-name">${r.name}</span>
           <span class="robot-desc">${r.desc}</span>
         </div>
@@ -917,7 +924,7 @@
 
       p2Grid.innerHTML = ROBOT_PRESETS.map((r, idx) => `
         <div class="robot-card ${idx === p2SelectedRobotIndex ? 'selected' : ''}" onclick="selectRobot(1, ${idx})">
-          <span class="robot-icon"><img src="${r.image}" alt="${r.name}"></span>
+          <span class="robot-icon">${getRobotAvatarHtml(r.image, r.fallback)}</span>
           <span class="robot-name">${r.name}</span>
           <span class="robot-desc">${r.desc}</span>
         </div>
@@ -980,18 +987,18 @@
         if (p) {
           const container = document.getElementById(`tokens-${p.pos}`);
           if (container) {
-            container.innerHTML += `<div class="token-badge" title="${p.name} (${p.robotName})"><img src="${p.image}"></div>`;
+            container.innerHTML += `<div class="token-badge" title="${p.name} (${p.robotName})">${getRobotAvatarHtml(p.image, p.fallback || '🤖')}</div>`;
           }
         }
       });
 
       // Update HUD
-      document.getElementById('p1-card-icon').innerHTML = `<img src="${p1.image}">`;
+      document.getElementById('p1-card-icon').innerHTML = getRobotAvatarHtml(p1.image, p1.fallback || '🤖');
       document.getElementById('p1-card-name').innerText = p1.name;
       document.getElementById('p1-card-title').innerText = `${p1.robotName} (${p1.title})`;
       document.getElementById('p1-crystal').innerText = p1.crystals;
 
-      document.getElementById('p2-card-icon').innerHTML = `<img src="${p2.image}">`;
+      document.getElementById('p2-card-icon').innerHTML = getRobotAvatarHtml(p2.image, p2.fallback || '🦾');
       document.getElementById('p2-card-name').innerText = p2.name;
       document.getElementById('p2-card-title').innerText = `${p2.robotName} (${p2.title})`;
       document.getElementById('p2-crystal').innerText = p2.crystals;
@@ -1004,11 +1011,16 @@
       document.getElementById('p2-card').classList.toggle('active', turn === 1);
 
       const curPlayer = roomData.players[turn];
-      document.getElementById('turn-display').innerHTML = `ตาของ: <img src="${curPlayer.image}" style="width:24px; height:24px; object-fit:contain;"> ${curPlayer.name} (${curPlayer.robotName})`;
+      document.getElementById('turn-display').innerHTML = `ตาของ: ${getRobotAvatarHtml(curPlayer.image, curPlayer.fallback || '🤖')} ${curPlayer.name} (${curPlayer.robotName})`;
 
       // Roll Button state
       const isMyTurn = (myRole === turn);
-      document.getElementById('btn-roll').disabled = (!isMyTurn || roomData.phase !== 'idle');
+      document.getElementById('btn-roll').disabled = (!isMyTurn || roomData.phase !== 'idle' || isAnimatingDice);
+
+      // Trigger sync for rolling phase across screens
+      if (roomData.phase === 'rolling' && roomData.lastRoll && !isAnimatingDice) {
+        animate3DDice(roomData.lastRoll);
+      }
 
       // Sync Modals/Phases
       syncModalPhase();
@@ -1020,26 +1032,28 @@
       if (!invContainer || !p) return;
 
       const isMyTurn = (myRole === playerIndex);
+      const inv = p.inventory || { shield: 0, timeExtender: 0, doubleCrystal: 0, warpBoost: 0 };
+      const buffs = p.activeBuffs || {};
 
       invContainer.innerHTML = `
-        <button class="inv-item-btn" onclick="useItem('shield', ${playerIndex})" ${!isMyTurn || p.inventory.shield <= 0 ? 'disabled' : ''} title="เกราะกันคำตอบผิด">
-          🛡️ ${p.inventory.shield}
+        <button class="inv-item-btn" onclick="useItem('shield', ${playerIndex})" ${!isMyTurn || inv.shield <= 0 ? 'disabled' : ''} title="เกราะกันคำตอบผิด">
+          🛡️ ${inv.shield || 0}
         </button>
-        <button class="inv-item-btn ${p.activeBuffs.timeExtender ? 'active-buff' : ''}" onclick="useItem('timeExtender', ${playerIndex})" ${!isMyTurn || p.inventory.timeExtender <= 0 ? 'disabled' : ''} title="ยืดเวลา +5 วินาที">
-          ⏱️ ${p.inventory.timeExtender}
+        <button class="inv-item-btn ${buffs.timeExtender ? 'active-buff' : ''}" onclick="useItem('timeExtender', ${playerIndex})" ${!isMyTurn || inv.timeExtender <= 0 ? 'disabled' : ''} title="ยืดเวลา +5 วินาที">
+          ⏱️ ${inv.timeExtender || 0}
         </button>
-        <button class="inv-item-btn ${p.activeBuffs.doubleCrystal ? 'active-buff' : ''}" onclick="useItem('doubleCrystal', ${playerIndex})" ${!isMyTurn || p.inventory.doubleCrystal <= 0 ? 'disabled' : ''} title="บูสต์คริสตัล x2">
-          ✨ ${p.inventory.doubleCrystal}
+        <button class="inv-item-btn ${buffs.doubleCrystal ? 'active-buff' : ''}" onclick="useItem('doubleCrystal', ${playerIndex})" ${!isMyTurn || inv.doubleCrystal <= 0 ? 'disabled' : ''} title="บูสต์คริสตัล x2">
+          ✨ ${inv.doubleCrystal || 0}
         </button>
-        <button class="inv-item-btn" onclick="useItem('warpBoost', ${playerIndex})" ${!isMyTurn || p.inventory.warpBoost <= 0 ? 'disabled' : ''} title="วาร์ป +3 ช่อง">
-          🚀 ${p.inventory.warpBoost}
+        <button class="inv-item-btn" onclick="useItem('warpBoost', ${playerIndex})" ${!isMyTurn || inv.warpBoost <= 0 ? 'disabled' : ''} title="วาร์ป +3 ช่อง">
+          🚀 ${inv.warpBoost || 0}
         </button>
       `;
     }
 
     // 🎲 DICE ROLL TRIGGER & ANIMATION SYNC
     function triggerRollDice() {
-      if (myRole !== roomData.currentTurn || roomData.phase !== 'idle') return;
+      if (myRole !== roomData.currentTurn || roomData.phase !== 'idle' || isAnimatingDice) return;
 
       const outcome = Math.floor(Math.random() * 6) + 1;
       const nextPos = Math.min(roomData.players[myRole].pos + outcome, TOTAL_TILES);
@@ -1049,7 +1063,7 @@
         lastRoll: outcome
       });
 
-      // Animate Dice
+      // Animate Dice locally for the active player
       animate3DDice(outcome, () => {
         if (myRole === roomData.currentTurn) {
           db.ref(`rooms/${currentRoomCode}/players/${myRole}`).update({ pos: nextPos }).then(() => {
@@ -1060,6 +1074,7 @@
     }
 
     function animate3DDice(outcome, onComplete) {
+      isAnimatingDice = true;
       const cube = document.getElementById('cube');
       const shadow = document.getElementById('dice-shadow');
 
@@ -1068,7 +1083,7 @@
         4: { x: 0, y: 90 }, 5: { x: 90, y: 0 }, 6: { x: 180, y: 0 }
       };
 
-      const target = targetFaceAngles[outcome];
+      const target = targetFaceAngles[outcome] || targetFaceAngles[1];
       currentRotX += (360 * 4) + (target.x - (currentRotX % 360));
       currentRotY += (360 * 4) + (target.y - (currentRotY % 360));
 
@@ -1079,6 +1094,7 @@
       cube.style.transform = `rotateX(${currentRotX}deg) rotateY(${currentRotY}deg)`;
 
       setTimeout(() => {
+        isAnimatingDice = false;
         if (onComplete) onComplete();
       }, 2200);
     }
@@ -1178,7 +1194,7 @@
         questionView.classList.remove('hidden');
         resultView.classList.add('hidden');
 
-        const q = roomData.questionData;
+        const q = roomData.questionData || { realmIcon: '⚔️', realmName: 'ทั่วไป', question: '0 + 0', answer: 0 };
         document.getElementById('modal-realm-tag').innerText = `${q.realmIcon} ${q.realmName}`;
 
         const bonusBadge = document.getElementById('modal-bonus-badge');
@@ -1194,6 +1210,7 @@
         document.getElementById('btn-submit-ans').disabled = !isMyTurn;
 
         if (isMyTurn && document.activeElement !== document.getElementById('q-answer')) {
+          document.getElementById('q-answer').value = '';
           document.getElementById('q-answer').focus();
         }
 
@@ -1206,7 +1223,7 @@
         questionView.classList.add('hidden');
         resultView.classList.remove('hidden');
 
-        const res = roomData.lastResult;
+        const res = roomData.lastResult || { userAnsDisplay: '-', correctAns: '-', isCorrect: false };
         document.getElementById('user-ans-display').innerText = res.userAnsDisplay;
         document.getElementById('correct-ans-display').innerText = res.correctAns;
 
@@ -1239,7 +1256,7 @@
     function startTimerLocal() {
       clearInterval(timerInterval);
       
-      const p = roomData.players[roomData.currentTurn];
+      const p = roomData.players[roomData.currentTurn] || {};
       let limit = QUESTION_TIME_LIMIT;
       if (p.activeBuffs && p.activeBuffs.timeExtender) limit += 5;
 
@@ -1280,9 +1297,12 @@
       if (myRole !== roomData.currentTurn) return;
 
       const inputEl = document.getElementById('q-answer');
-      if (!isTimeout && inputEl.value === '') return;
+      if (!isTimeout && inputEl.value.trim() === '') return;
 
       const p = roomData.players[myRole];
+      if (!p.activeBuffs) p.activeBuffs = { timeExtender: false, doubleCrystal: false };
+      if (!p.inventory) p.inventory = { shield: 0, timeExtender: 0, doubleCrystal: 0, warpBoost: 0 };
+
       let userAnsDisplay = '';
       let isCorrect = false;
 
@@ -1309,8 +1329,13 @@
         saveScoreToHOF(p.name, p.robotName, p.crystals);
       } else if (p.inventory && p.inventory.shield > 0) {
         p.inventory.shield--;
-        isCorrect = true; // รอดชีวิต
+        isCorrect = true; // รอดชีวิตด้วยเกราะ
         isShieldUsed = true;
+      }
+
+      // รีเซ็ตบัฟยืดเวลาหลังใช้งานแล้ว
+      if (p.activeBuffs.timeExtender) {
+        p.activeBuffs.timeExtender = false;
       }
 
       db.ref(`rooms/${currentRoomCode}`).update({
@@ -1327,7 +1352,7 @@
       });
     }
 
-    // 🏆 6. END GAME TRIGGER & HANDLER (ปรับปรุงให้สมบูรณ์)
+    // 🏆 6. END GAME TRIGGER & HANDLER
     function triggerNextTurn() {
       if (myRole !== roomData.currentTurn) return;
 
@@ -1353,17 +1378,16 @@
 
     function showVictoryModal(data) {
       const winnerId = (data.winnerId !== undefined) ? data.winnerId : 0;
-      const winner = data.players[winnerId];
+      const winner = data.players ? data.players[winnerId] : null;
 
       document.getElementById('question-modal').classList.add('hidden');
       document.getElementById('shop-modal').classList.add('hidden');
 
       if (winner) {
-        document.getElementById('winner-icon-display').innerHTML = `<img src="${winner.image}" style="width:75px; height:75px; object-fit:contain; filter:drop-shadow(0 0 10px var(--accent-gold));">`;
+        document.getElementById('winner-icon-display').innerHTML = getRobotAvatarHtml(winner.image, winner.fallback || '👑');
         document.getElementById('winner-name-display').innerText = `${winner.name} (${winner.robotName})`;
         document.getElementById('winner-stats-display').innerText = `สะสม Crystal ทั้งหมด: ${winner.crystals} 💎`;
         
-        // บันทึกเข้า Hall of Fame แบบอัตโนมัติ
         saveScoreToHOF(winner.name, winner.robotName, winner.crystals);
       }
 
@@ -1382,15 +1406,23 @@
     // 🛒 SHOP LOGIC
     function openShopModal(fromMainMenu = false) {
       isFromMainMenuShop = fromMainMenu;
-      const targetRole = (typeof myRole === 'number') ? myRole : 0;
-      const p = roomData ? roomData.players[targetRole] : { name: 'ผู้เข้าชม', crystals: 0 };
+      let playerName = 'ผู้เข้าชม / เมนูหลัก';
+      let crystals = 0;
+
+      if (!fromMainMenu && roomData && typeof myRole === 'number') {
+        const p = roomData.players[myRole];
+        if (p) {
+          playerName = p.name;
+          crystals = p.crystals;
+        }
+      }
       
-      document.getElementById('shop-player-name').innerText = p.name;
-      document.getElementById('shop-player-crystals').innerText = p.crystals;
+      document.getElementById('shop-player-name').innerText = playerName;
+      document.getElementById('shop-player-crystals').innerText = crystals;
 
       const grid = document.getElementById('shop-items-grid');
       grid.innerHTML = SHOP_ITEMS.map(item => {
-        const canAfford = p.crystals >= item.price && !isSpectatorMode;
+        const canAfford = (!fromMainMenu && !isSpectatorMode && crystals >= item.price);
         return `
           <div class="shop-item-card">
             <div class="shop-item-info">
@@ -1400,7 +1432,7 @@
             <div class="shop-item-buy">
               <span class="shop-price">${item.price} 💎</span>
               <button class="btn-buy" onclick="buyShopItem('${item.id}')" ${!canAfford ? 'disabled' : ''}>
-                ${canAfford ? 'แลกซื้อ' : 'คริสตัลไม่พอ'}
+                ${fromMainMenu ? 'ต้องเข้าเล่นเกม' : (canAfford ? 'แลกซื้อ' : 'คริสตัลไม่พอ')}
               </button>
             </div>
           </div>
@@ -1415,17 +1447,18 @@
     }
 
     function buyShopItem(itemId) {
-      if (isSpectatorMode || typeof myRole !== 'number') return;
+      if (isFromMainMenuShop || isSpectatorMode || typeof myRole !== 'number' || !roomData) return;
 
       const p = roomData.players[myRole];
       const item = SHOP_ITEMS.find(i => i.id === itemId);
+      if (!p.inventory) p.inventory = { shield: 0, timeExtender: 0, doubleCrystal: 0, warpBoost: 0 };
       
       if (p.crystals >= item.price) {
         p.crystals -= item.price;
         p.inventory[itemId] = (p.inventory[itemId] || 0) + 1;
         
         db.ref(`rooms/${currentRoomCode}/players/${myRole}`).set(p).then(() => {
-          openShopModal(isFromMainMenuShop);
+          openShopModal(false);
         });
       }
     }
@@ -1433,6 +1466,8 @@
     function useItem(itemId, playerIndex) {
       if (playerIndex !== myRole || playerIndex !== roomData.currentTurn) return;
       const p = roomData.players[playerIndex];
+      if (!p.inventory) p.inventory = { shield: 0, timeExtender: 0, doubleCrystal: 0, warpBoost: 0 };
+      if (!p.activeBuffs) p.activeBuffs = { timeExtender: false, doubleCrystal: false };
 
       if (p.inventory[itemId] > 0) {
         if (itemId === 'warpBoost') {
@@ -1464,6 +1499,7 @@
 
     // 🏆 HALL OF FAME LOGIC
     function saveScoreToHOF(name, robotName, crystals) {
+      if (!name) return;
       let data = JSON.parse(localStorage.getItem('math_robot_hof') || '[]');
       const exist = data.find(d => d.name === name);
       if (exist) { 
