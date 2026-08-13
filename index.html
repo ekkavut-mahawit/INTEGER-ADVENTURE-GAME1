@@ -1173,6 +1173,9 @@
         document.getElementById('choice-duel-btn').disabled = !isMyTurn;
 
       } else if (roomData.phase === 'question') {
+        if (questionView.classList.contains('hidden')) {
+          document.getElementById('q-answer').value = '';
+        }
         modal.classList.remove('hidden');
         choiceView.classList.add('hidden');
         questionView.classList.remove('hidden');
