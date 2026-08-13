@@ -555,6 +555,16 @@
     </div>
   </div>
 
+  <!-- REALM ANNOUNCEMENT MODAL (เพิ่มหน้าแจ้งบอกเมื่อเข้าด่าน) -->
+  <div id="realm-announce-modal" class="modal hidden">
+    <div class="modal-card" style="border-color: var(--accent-gold); box-shadow: 0 0 35px rgba(245, 158, 11, 0.5);">
+      <div id="realm-announce-icon" style="font-size: 4rem; margin-bottom: 10px;">➕</div>
+      <h2 id="realm-announce-title" style="color: var(--accent-gold); font-size: 2rem; margin-bottom: 8px;">⚔️ เข้าสู่ด่านการบวก</h2>
+      <p id="realm-announce-desc" style="color: #94a3b8; font-size: 1rem; margin-bottom: 22px;">เตรียมพร้อมสำหรับการคำนวณจำนวนเต็ม!</p>
+      <button id="btn-realm-continue" onclick="confirmRealmAnnouncement()" class="btn-submit" style="background: linear-gradient(135deg, var(--accent-gold), #d97706); color: #0f172a;">⚔️ เข้าสู่ด่านท้าทาย</button>
+    </div>
+  </div>
+
   <!-- QUESTION & SOLUTION MODAL -->
   <div id="question-modal" class="modal hidden">
     <div id="modal-card" class="modal-card">
@@ -980,10 +990,10 @@
     const EXPLOSION_SVG = `<svg class="explosion-svg" viewBox="0 0 100 100"><circle class="exp-shockwave" cx="50" cy="50" r="35" fill="none" stroke="#ef4444" /><g class="exp-blast"><polygon class="exp-flame" points="50,10 62,35 90,25 72,50 88,78 58,68 50,92 38,68 12,80 26,50 10,25 38,35" fill="#f97316" /><polygon class="exp-flame" points="50,22 58,40 76,32 64,50 74,68 55,60 50,78 42,60 24,68 34,50 22,32 40,40" fill="#facc15" style="animation-delay: 0.2s;" /><circle cx="50" cy="50" r="14" fill="#ffffff" /></g></svg>`;
 
     function getRealm(tileNum) {
-      if (tileNum <= 12) return { name: 'บวก (Addition)', type: 'add', icon: '➕' };
-      if (tileNum <= 22) return { name: 'ลบ (Subtraction)', type: 'sub', icon: '➖' };
-      if (tileNum <= 34) return { name: 'คูณ (Multiplication)', type: 'mul', icon: '✖️' };
-      return { name: 'หาร (Division)', type: 'div', icon: '➗' };
+      if (tileNum <= 12) return { name: 'บวก (Addition)', type: 'add', icon: '➕', title: '⚔️ เข้าสู่ด่านการบวก', desc: 'ยินดีต้อนรับสู่ดินแดนการบวกจำนวนเต็ม! คำนวณรหัสพลังงานเพื่อรุดหน้าต่อไป' };
+      if (tileNum <= 22) return { name: 'ลบ (Subtraction)', type: 'sub', icon: '➖', title: '⚔️ เข้าสู่ด่านการลบ', desc: 'เข้าสู่ดินแดนการลบจำนวนเต็ม! ระมัดระวังเครื่องหมายลบให้ดี' };
+      if (tileNum <= 34) return { name: 'คูณ (Multiplication)', type: 'mul', icon: '✖️', title: '⚔️ เข้าสู่ด่านการคูณ', desc: 'เข้าสู่ดินแดนการคูณจำนวนเต็ม! ทวีคูณพลังงานหุ่นยนต์ของคุณ' };
+      return { name: 'หาร (Division)', type: 'div', icon: '➗', title: '⚔️ เข้าสู่ด่านการหาร', desc: 'เข้าสู่ดินแดนการหารจำนวนเต็ม! ด่านสุดท้ายพิชิตปราสาท Zero Castle' };
     }
 
     function switchView(viewId) {
@@ -1291,8 +1301,20 @@
       // Animate Dice
       animate3DDice(outcome, () => {
         if (myRole === roomData.currentTurn) {
-          db.ref(`rooms/${currentRoomCode}/players/${myRole}`).update({ pos: nextPos }).then(() => {
-            popQuestion(nextPos);
+          const p = roomData.players[myRole];
+          const oldRealm = p.lastRealm || null;
+          const newRealmObj = getRealm(nextPos);
+
+          db.ref(`rooms/${currentRoomCode}/players/${myRole}`).update({ pos: nextPos, lastRealm: newRealmObj.type }).then(() => {
+            if (oldRealm !== newRealmObj.type) {
+              db.ref(`rooms/${currentRoomCode}`).update({
+                phase: 'realm_announce',
+                pendingTileNum: nextPos,
+                realmInfo: newRealmObj
+              });
+            } else {
+              popQuestion(nextPos);
+            }
           });
         }
       });
@@ -1320,6 +1342,12 @@
       setTimeout(() => {
         if (onComplete) onComplete();
       }, 2200);
+    }
+
+    function confirmRealmAnnouncement() {
+      if (myRole !== roomData.currentTurn) return;
+      const tileNum = roomData.pendingTileNum || roomData.players[myRole].pos;
+      popQuestion(tileNum);
     }
 
     // ----------------------------------------------------
@@ -1456,12 +1484,25 @@
 
     function syncModalPhase() {
       const modal = document.getElementById('question-modal');
+      const realmModal = document.getElementById('realm-announce-modal');
       const choiceView = document.getElementById('modal-choice-view');
       const questionView = document.getElementById('modal-question-view');
       const resultView = document.getElementById('modal-result-view');
       const isMyTurn = (myRole === roomData.currentTurn);
 
-      if (roomData.phase === 'choice') {
+      if (roomData.phase === 'realm_announce') {
+        modal.classList.add('hidden');
+        realmModal.classList.remove('hidden');
+
+        const info = roomData.realmInfo || getRealm(roomData.pendingTileNum || 1);
+        document.getElementById('realm-announce-icon').innerText = info.icon;
+        document.getElementById('realm-announce-title').innerText = info.title;
+        document.getElementById('realm-announce-desc').innerText = info.desc;
+
+        document.getElementById('btn-realm-continue').disabled = !isMyTurn;
+
+      } else if (roomData.phase === 'choice') {
+        realmModal.classList.add('hidden');
         modal.classList.remove('hidden');
         choiceView.classList.remove('hidden');
         questionView.classList.add('hidden');
@@ -1472,6 +1513,7 @@
         document.getElementById('choice-duel-btn').disabled = !isMyTurn;
 
       } else if (roomData.phase === 'question') {
+        realmModal.classList.add('hidden');
         if (questionView.classList.contains('hidden')) {
           document.getElementById('q-answer').value = '';
         }
@@ -1502,6 +1544,7 @@
         startTimerLocal();
 
       } else if (roomData.phase === 'result') {
+        realmModal.classList.add('hidden');
         clearInterval(timerInterval);
         modal.classList.remove('hidden');
         choiceView.classList.add('hidden');
@@ -1533,6 +1576,7 @@
         document.getElementById('btn-next-turn').disabled = !isMyTurn;
 
       } else {
+        realmModal.classList.add('hidden');
         modal.classList.add('hidden');
         clearInterval(timerInterval);
       }
@@ -1754,9 +1798,22 @@
           p.inventory.warpBoost--;
           p.pos = Math.min(p.pos + 3, TOTAL_TILES);
           soundEngine.playWarp();
+          
+          const oldRealm = p.lastRealm || null;
+          const newRealmObj = getRealm(p.pos);
+          p.lastRealm = newRealmObj.type;
+
           db.ref(`rooms/${currentRoomCode}/players/${playerIndex}`).set(p).then(() => {
             alert(`🚀 ${p.name} ใช้เทอร์โบบูสต์! เดินหน้าเพิ่ม 3 ช่องทันที`);
-            popQuestion(p.pos);
+            if (oldRealm !== newRealmObj.type) {
+              db.ref(`rooms/${currentRoomCode}`).update({
+                phase: 'realm_announce',
+                pendingTileNum: p.pos,
+                realmInfo: newRealmObj
+              });
+            } else {
+              popQuestion(p.pos);
+            }
           });
         } else if (itemId === 'timeExtender') {
           if (!p.activeBuffs.timeExtender) {
