@@ -372,22 +372,23 @@
     @keyframes expBlast { 0% { transform: scale(0.3); opacity: 0.2; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 0.9; } }
     @keyframes flameFlicker { 0% { transform: scale(0.9) rotate(-3deg); fill: #f97316; } 100% { transform: scale(1.15) rotate(4deg); fill: #ef4444; } }
     @keyframes shockwave { 0% { transform: scale(0.2); opacity: 1; stroke-width: 6; } 100% { transform: scale(1.6); opacity: 0; stroke-width: 1; } }
+    
     /* 📱 CSS ปรับแต่งเพิ่มเติมสำหรับหน้าจอมือถือ */
-@media (max-width: 640px) {
-    .game-board {
-        transform: scale(0.9);
-        transform-origin: top center;
+    @media (max-width: 640px) {
+        .game-board {
+            transform: scale(0.9);
+            transform-origin: top center;
+        }
+        
+        .modal-content {
+            width: 95% !important;
+            padding: 1rem !important;
+        }
+        
+        .dice-container {
+            scale: 0.8;
+        }
     }
-    
-    .modal-content {
-        width: 95% !important;
-        padding: 1rem !important;
-    }
-    
-    .dice-container {
-        scale: 0.8;
-    }
-}
   </style>
 </head>
 <body>
@@ -643,6 +644,26 @@
     </div>
   </div>
 
+  <!-- 🏆 5. END GAME / VICTORY MODAL (เพิ่มระบบจบเกมสมบูรณ์) -->
+  <div id="victory-modal" class="modal hidden">
+    <div class="modal-card" style="border-color: var(--accent-gold); box-shadow: 0 0 45px rgba(245, 158, 11, 0.7);">
+      <div style="font-size: 3.5rem; margin-bottom: 8px;">👑</div>
+      <h2 style="color: var(--accent-gold); font-size: 2.2rem; margin-bottom: 6px;">ศึกสงครามสิ้นสุดลงแล้ว!</h2>
+      <p style="color: #94a3b8; font-size: 0.95rem; margin-bottom: 18px;">ยูนิตหุ่นยนต์ได้บุกพิชิตปราสาท Zero Castle สำเร็จ</p>
+      
+      <div style="background: rgba(245, 158, 11, 0.12); border: 2px solid var(--accent-gold); border-radius: 16px; padding: 18px; margin-bottom: 22px;">
+        <div id="winner-icon-display" style="display:flex; justify-content:center; align-items:center; min-height: 70px; margin-bottom:8px;"></div>
+        <h3 id="winner-name-display" style="color: white; font-size: 1.5rem; margin-bottom:4px;">-</h3>
+        <p id="winner-stats-display" style="color: var(--accent-gold); font-weight: bold; font-size: 1.1rem;">สะสม Crystal ทั้งหมด: 0 💎</p>
+      </div>
+
+      <div style="display: flex; gap: 12px; flex-direction: column;">
+        <button onclick="closeVictoryAndShowHOF()" class="btn-submit" style="background: linear-gradient(135deg, var(--accent-purple), #6d28d9); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);">🏆 ดูหอเกียรติยศ (Hall of Fame)</button>
+        <button onclick="showMenu()" style="padding: 14px; background: #475569; color: white; border-radius: 12px; font-weight: bold; font-size:1rem;">🚪 กลับสู่เมนูหลัก</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ----------------------------------------------------
     // 1. FIREBASE CONFIGURATION & INITIALIZATION
@@ -732,6 +753,7 @@
     }
 
     function showMenu() { 
+      document.getElementById('victory-modal').classList.add('hidden');
       if (roomRef) roomRef.off(); 
       switchView('view-menu'); 
     }
@@ -847,8 +869,11 @@
           document.getElementById('p2-name-input').value = roomData.players[1].name;
         }
 
-        // View Transition
-        if (roomData.status === 'playing') {
+        // 🏆 View Transition & End Game Check
+        if (roomData.status === 'ended') {
+          showVictoryModal(roomData);
+        } else if (roomData.status === 'playing') {
+          document.getElementById('victory-modal').classList.add('hidden');
           if (document.getElementById('view-game').classList.contains('hidden')) {
             initBoard();
             switchView('view-game');
@@ -898,7 +923,7 @@
     }
 
     function selectRobot(playerRoleIdx, index) {
-      if (myRole !== playerRoleIdx) return; // ล็อกห้ามเลือกตัวละครแทนฝั่งตรงข้าม
+      if (myRole !== playerRoleIdx) return; 
 
       if (playerRoleIdx === 0) p1SelectedRobotIndex = index;
       else p2SelectedRobotIndex = index;
@@ -908,7 +933,7 @@
     }
 
     function confirmStartGame() {
-      if (myRole !== 0) return; // เฉพาะ Host P1 ที่กดเริ่มได้
+      if (myRole !== 0) return; 
       db.ref(`rooms/${currentRoomCode}`).update({ status: 'playing' });
     }
 
@@ -1300,14 +1325,20 @@
       });
     }
 
+    // 🏆 6. END GAME TRIGGER & HANDLER (ปรับปรุงให้สมบูรณ์)
     function triggerNextTurn() {
       if (myRole !== roomData.currentTurn) return;
 
       const p = roomData.players[myRole];
+      
+      // เมื่อผู้เล่นเดินถึงหรือผ่านช่องสุดท้าย (Zero Castle)
       if (p.pos >= TOTAL_TILES) {
-        alert(`🏆 ยินดีด้วย! ${p.name} (${p.robotName}) พิชิตปราสาท Zero Castle ได้สำเร็จ!`);
-        db.ref(`rooms/${currentRoomCode}`).update({ status: 'ended' });
-        showHOF();
+        saveScoreToHOF(p.name, p.robotName, p.crystals);
+        db.ref(`rooms/${currentRoomCode}`).update({
+          status: 'ended',
+          winnerId: myRole,
+          phase: 'ended'
+        });
         return;
       }
 
@@ -1316,6 +1347,30 @@
         currentTurn: nextTurn,
         phase: 'idle'
       });
+    }
+
+    function showVictoryModal(data) {
+      const winnerId = (data.winnerId !== undefined) ? data.winnerId : 0;
+      const winner = data.players[winnerId];
+
+      document.getElementById('question-modal').classList.add('hidden');
+      document.getElementById('shop-modal').classList.add('hidden');
+
+      if (winner) {
+        document.getElementById('winner-icon-display').innerHTML = `<img src="${winner.image}" style="width:75px; height:75px; object-fit:contain; filter:drop-shadow(0 0 10px var(--accent-gold));">`;
+        document.getElementById('winner-name-display').innerText = `${winner.name} (${winner.robotName})`;
+        document.getElementById('winner-stats-display').innerText = `สะสม Crystal ทั้งหมด: ${winner.crystals} 💎`;
+        
+        // บันทึกเข้า Hall of Fame แบบอัตโนมัติ
+        saveScoreToHOF(winner.name, winner.robotName, winner.crystals);
+      }
+
+      document.getElementById('victory-modal').classList.remove('hidden');
+    }
+
+    function closeVictoryAndShowHOF() {
+      document.getElementById('victory-modal').classList.add('hidden');
+      showHOF();
     }
 
     document.getElementById('q-answer').addEventListener('keypress', function(e) {
