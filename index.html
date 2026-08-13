@@ -1086,30 +1086,90 @@
     // ----------------------------------------------------
     // 5. QUESTION & MODALS SYNC
     // ----------------------------------------------------
+    
+    // คลังโจทย์จำนวนเต็ม (ประเภทละ 15 ข้อ) ตามรูปแบบตัวอย่างใน New Text Document (6)
+    const QUESTION_BANK = {
+      add: [
+        { q: '(-7) + 12', a: 5 },
+        { q: '15 + (-9)', a: 6 },
+        { q: '(-8) + (-6)', a: -14 },
+        { q: '(-13) + 7', a: -6 },
+        { q: '(-12) + 7 + (-5)', a: -10 },
+        { q: '18 + (-25) + 9', a: 2 },
+        { q: '(-16) + (-7) + 20', a: -3 },
+        { q: '(-15) + 23', a: 8 },
+        { q: '(-11) + (-14)', a: -25 },
+        { q: '24 + (-30)', a: -6 },
+        { q: '(-9) + 15 + (-8)', a: -2 },
+        { q: '(-20) + (-12) + 18', a: -14 },
+        { q: '32 + (-17) + (-10)', a: 5 },
+        { q: '(-25) + 14 + (-6)', a: -17 },
+        { q: '(-18) + (-12) + 35', a: 5 }
+      ],
+      sub: [
+        { q: '9 - (-4)', a: 13 },
+        { q: '(-6) - 8', a: -14 },
+        { q: '7 - 12', a: -5 },
+        { q: '(-10) - (-3)', a: -7 },
+        { q: '(-8) - (-15)', a: 7 },
+        { q: '14 - (-6) - 9', a: 11 },
+        { q: '(-5) - 7 - (-4)', a: -8 },
+        { q: '(-12) - 9', a: -21 },
+        { q: '18 - (-7)', a: 25 },
+        { q: '(-15) - (-8)', a: -7 },
+        { q: '(-20) - 6 - (-10)', a: -16 },
+        { q: '15 - (-12) - 18', a: 9 },
+        { q: '(-9) - (-14) - 8', a: -3 },
+        { q: '(-25) - (-15) - (-7)', a: -3 },
+        { q: '30 - 45 - (-12)', a: -3 }
+      ],
+      mul: [
+        { q: '(-6) × 4', a: -24 },
+        { q: '(-7) × (-3)', a: 21 },
+        { q: '5 × (-8)', a: -40 },
+        { q: '(-9) × (-2)', a: 18 },
+        { q: '(-3) × (-4) × 2', a: 24 },
+        { q: '(-5) × 6 × (-2)', a: 60 },
+        { q: '2 × (-7) × 3', a: -42 },
+        { q: '(-2) × (-3) × (-4)', a: -24 },
+        { q: '(-8) × 7', a: -56 },
+        { q: '(-9) × (-6)', a: 54 },
+        { q: '12 × (-4)', a: -48 },
+        { q: '(-4) × (-5) × (-3)', a: -60 },
+        { q: '(-2) × 8 × (-5)', a: 80 },
+        { q: '(-6) × (-3) × 4', a: 72 },
+        { q: '3 × (-9) × (-2)', a: 54 }
+      ],
+      div: [
+        { q: '(-36) ÷ 9', a: -4 },
+        { q: '(-42) ÷ (-7)', a: 6 },
+        { q: '56 ÷ (-8)', a: -7 },
+        { q: '(-63) ÷ 9', a: -7 },
+        { q: '(-48) ÷ (-6) + (-5)', a: 3 },
+        { q: '(-72) ÷ 8 + 4', a: -5 },
+        { q: '54 ÷ (-9) - 2', a: -8 },
+        { q: '(-84) ÷ (-7) + (-3)', a: 9 },
+        { q: '(-45) ÷ 5', a: -9 },
+        { q: '(-72) ÷ (-9)', a: 8 },
+        { q: '81 ÷ (-9)', a: -9 },
+        { q: '(-90) ÷ (-10) + (-6)', a: 3 },
+        { q: '(-60) ÷ 12 - 5', a: -10 },
+        { q: '96 ÷ (-12) + (-4)', a: -12 },
+        { q: '(-100) ÷ (-5) - 15', a: 5 }
+      ]
+    };
+
     function generateQuestion(tileNum, difficulty = 'normal') {
       const realm = getRealm(tileNum);
-      let a, b, q, ans;
+      const bank = QUESTION_BANK[realm.type] || QUESTION_BANK.add;
+      const selectedItem = bank[Math.floor(Math.random() * bank.length)];
 
-      if (realm.type === 'add') {
-        let max = difficulty === 'easy' ? 10 : (difficulty === 'hard' ? 35 : (difficulty === 'duel' ? 60 : 20));
-        a = Math.floor(Math.random() * max) + 1; b = Math.floor(Math.random() * max) + 1;
-        q = `${a} + ${b}`; ans = a + b;
-      } else if (realm.type === 'sub') {
-        let max = difficulty === 'easy' ? 15 : (difficulty === 'hard' ? 40 : (difficulty === 'duel' ? 70 : 20));
-        a = Math.floor(Math.random() * max) + 10; b = Math.floor(Math.random() * (a - 1)) + 1;
-        q = `${a} - ${b}`; ans = a - b;
-      } else if (realm.type === 'mul') {
-        let maxA = difficulty === 'easy' ? 5 : (difficulty === 'hard' ? 12 : (difficulty === 'duel' ? 18 : 9));
-        let maxB = difficulty === 'easy' ? 5 : (difficulty === 'hard' ? 12 : (difficulty === 'duel' ? 18 : 9));
-        a = Math.floor(Math.random() * maxA) + 2; b = Math.floor(Math.random() * maxB) + 2;
-        q = `${a} × ${b}`; ans = a * b;
-      } else { 
-        let maxAns = difficulty === 'easy' ? 6 : (difficulty === 'hard' ? 15 : (difficulty === 'duel' ? 25 : 10));
-        let maxB = difficulty === 'easy' ? 5 : (difficulty === 'hard' ? 12 : (difficulty === 'duel' ? 15 : 8));
-        b = Math.floor(Math.random() * maxB) + 2; ans = Math.floor(Math.random() * maxAns) + 1;
-        a = b * ans; q = `${a} ÷ ${b}`;
-      }
-      return { realmName: realm.name, realmIcon: realm.icon, question: q, answer: ans };
+      return { 
+        realmName: realm.name, 
+        realmIcon: realm.icon, 
+        question: selectedItem.q, 
+        answer: selectedItem.a 
+      };
     }
 
     function popQuestion(tileNum) {
