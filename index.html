@@ -3,465 +3,631 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>INTEGER ADVENTURE - Online Board Game</title>
-
-  <!-- Firebase SDK (Compat Version) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <title>INTEGER ADVENTURE - ภารกิจพิชิตอาณาจักรจำนวนเต็ม (Online)</title>
   
-  <!-- Canvas Confetti สำหรับ Visual Effect 🎉 -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
   <style>
-    /* ==========================================
-       THEME & GLOBAL STYLES
-       ========================================== */
     :root {
       --bg-dark: #0f172a;
       --panel-bg: #1e293b;
+      --card-bg: #334155;
+      --accent-gold: #f59e0b;
+      --accent-blue: #3b82f6;
       --accent-cyan: #06b6d4;
-      --accent-purple: #a855f7;
-      --accent-amber: #f59e0b;
       --accent-green: #10b981;
-      --accent-rose: #f43f5e;
-      --text-light: #f8fafc;
-      --border-color: #334155;
+      --accent-red: #ef4444;
+      --accent-purple: #8b5cf6;
+      --accent-orange: #f97316;
+      --accent-pink: #ec4899;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      user-select: none;
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 0; }
+    body { background-color: var(--bg-dark); color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+
+    .hidden { display: none !important; }
+    button { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: all 0.2s ease-in-out; }
+    button:hover { opacity: 0.95; transform: translateY(-2px); }
+    button:active { transform: translateY(0); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+    /* Room Badge Banner */
+    .room-badge-banner {
+      background: linear-gradient(135deg, var(--accent-purple), #4c1d95);
+      color: #fff; padding: 10px 20px; border-radius: 12px; margin-bottom: 15px;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); font-weight: bold;
     }
 
-    body {
-      background-color: var(--bg-dark);
-      color: var(--text-light);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 10px;
-      overflow-x: hidden;
+    /* --- Views --- */
+    .view { width: 100%; max-width: 1100px; background: var(--panel-bg); border-radius: 20px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); border: 1px solid #475569; }
+
+    /* Main Menu */
+    .menu-container { text-align: center; padding: 40px 20px; }
+    .menu-title { font-size: 2.8rem; color: var(--accent-gold); margin-bottom: 10px; text-shadow: 0 0 15px rgba(245, 158, 11, 0.5); letter-spacing: 1px; }
+    .menu-subtitle { font-size: 1.25rem; color: #94a3b8; margin-bottom: 35px; }
+    .menu-btn { display: block; width: 320px; margin: 15px auto; padding: 16px; font-size: 1.15rem; color: white; background: linear-gradient(135deg, var(--accent-blue), #1d4ed8); border-radius: 12px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
+    .menu-btn.join { background: linear-gradient(135deg, var(--accent-orange), #c2410c); box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4); }
+    .menu-btn.spec { background: linear-gradient(135deg, var(--accent-cyan), #0891b2); box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4); }
+    .menu-btn.hof { background: linear-gradient(135deg, var(--accent-purple), #6d28d9); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4); }
+
+    /* Character Selection View */
+    .char-select-header { text-align: center; margin-bottom: 25px; }
+    .char-select-title { font-size: 2rem; color: var(--accent-cyan); text-shadow: 0 0 10px rgba(6, 182, 212, 0.4); }
+    .char-select-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px; }
+    
+    .player-select-box { background: #0f172a; padding: 20px; border-radius: 16px; border: 2px solid #334155; position: relative; }
+    .player-select-box.p1-box { border-color: var(--accent-cyan); }
+    .player-select-box.p2-box { border-color: var(--accent-orange); }
+    .player-select-box.disabled-box { opacity: 0.5; pointer-events: none; }
+
+    .player-title-tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; margin-bottom: 12px; }
+    .p1-tag { background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
+    .p2-tag { background: rgba(249, 115, 22, 0.2); color: var(--accent-orange); border: 1px solid var(--accent-orange); }
+
+    .name-input-group { margin-bottom: 15px; }
+    .name-input-group label { display: block; font-size: 0.9rem; color: #94a3b8; margin-bottom: 5px; text-align: left; }
+    .name-input { width: 100%; padding: 10px 14px; background: #1e293b; border: 1px solid #475569; border-radius: 8px; color: white; font-size: 1rem; outline: none; }
+    .name-input:focus { border-color: var(--accent-gold); }
+
+    .robot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 10px; padding: 10px 5px; }
+    
+    .robot-card { 
+      background: #1e293b; border: 2px solid #334155; border-radius: 12px; padding: 14px 6px; 
+      text-align: center; cursor: pointer; transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative;
+    }
+    .robot-card:hover { border-color: var(--accent-gold); transform: translateY(-4px); }
+
+    .robot-icon { display: flex; justify-content: center; align-items: center; min-height: 55px; margin-bottom: 8px; overflow: visible; }
+    .robot-icon img { width: 44px; height: 44px; object-fit: contain; transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .robot-name { font-size: 0.8rem; font-weight: bold; color: #e2e8f0; display: block; margin-top: 4px; }
+    .robot-desc { font-size: 0.68rem; color: #94a3b8; display: block; margin-top: 2px; }
+
+    .p1-box .robot-card.selected { 
+      border-color: var(--accent-cyan); background: rgba(6, 182, 212, 0.18); 
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.7), inset 0 0 12px rgba(6, 182, 212, 0.4); 
+      transform: translateY(-2px); z-index: 10;
+    }
+    .p1-box .robot-card.selected .robot-icon img { transform: scale(3) translateY(-8px); filter: drop-shadow(0 0 14px var(--accent-cyan)) drop-shadow(0 0 4px #ffffff); }
+
+    .p2-box .robot-card.selected { 
+      border-color: var(--accent-orange); background: rgba(249, 115, 22, 0.18); 
+      box-shadow: 0 0 25px rgba(249, 115, 22, 0.7), inset 0 0 12px rgba(249, 115, 22, 0.4); 
+      transform: translateY(-2px); z-index: 10;
+    }
+    .p2-box .robot-card.selected .robot-icon img { transform: scale(3) translateY(-8px); filter: drop-shadow(0 0 14px var(--accent-orange)) drop-shadow(0 0 4px #ffffff); }
+
+    .start-battle-btn { display: block; width: 100%; max-width: 320px; margin: 0 auto; padding: 16px; font-size: 1.3rem; background: linear-gradient(135deg, #10b981, #059669); color: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); text-transform: uppercase; letter-spacing: 1px; }
+
+    /* Hall of Fame */
+    .hof-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .podium { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-bottom: 30px; }
+    .podium-card { background: #334155; padding: 15px; border-radius: 12px; text-align: center; width: 130px; }
+    .podium-card.r1 { height: 170px; border: 2px solid var(--accent-gold); background: #475569; }
+    .podium-card.r2 { height: 140px; }
+    .podium-card.r3 { height: 120px; }
+    .hof-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    .hof-table th, .hof-table td { padding: 12px; text-align: center; border-bottom: 1px solid #334155; }
+
+    /* Game Screen Layout */
+    .game-layout { display: grid; grid-template-columns: 1fr 310px; gap: 20px; }
+    
+    .board-frame { 
+      position: relative; width: 100%; aspect-ratio: 45.68 / 42.86; 
+      background-image: url('board.png'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; 
+      border-radius: 16px; border: 3px solid #334155; overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
     }
 
-    /* Modal Styling */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(8px);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      opacity: 1;
-      transition: opacity 0.3s ease;
+    .board-grid { position: relative; width: 100%; height: 100%; }
+
+    .tile { 
+      position: absolute; width: 10%; height: 10%; transform: translate(-50%, -50%); 
+      display: flex; flex-direction: column; align-items: center; justify-content: center; background: transparent; border-radius: 50%; border: none;
     }
 
-    .modal-overlay.hidden {
-      display: none;
-      opacity: 0;
-      pointer-events: none;
+    /* ช่องโบนัสคริสตัล */
+    .tile.special-tile {
+      background: rgba(245, 158, 11, 0.25);
+      border: 2px solid var(--accent-gold) !important;
+      box-shadow: 0 0 18px rgba(245, 158, 11, 0.9), inset 0 0 10px rgba(245, 158, 11, 0.6);
+      animation: pulseSpecial 1.4s infinite alternate ease-in-out;
+      z-index: 2;
+    }
+    .tile.special-tile::before {
+      content: '⭐'; position: absolute; top: -10px; font-size: 0.85rem;
+      filter: drop-shadow(0 0 4px var(--accent-gold));
+    }
+    @keyframes pulseSpecial {
+      0% { transform: translate(-50%, -50%) scale(0.95); box-shadow: 0 0 10px rgba(245, 158, 11, 0.6); }
+      100% { transform: translate(-50%, -50%) scale(1.15); box-shadow: 0 0 25px rgba(245, 158, 11, 1), inset 0 0 12px rgba(255, 255, 255, 0.8); }
     }
 
-    .modal-card {
-      background: var(--panel-bg);
-      border: 2px solid var(--accent-cyan);
-      border-radius: 16px;
-      padding: 24px;
-      width: 90%;
-      max-width: 480px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-      text-align: center;
-      position: relative;
+    /* ช่องท้าดวล */
+    .tile.challenge-tile {
+      background: rgba(139, 92, 246, 0.25);
+      border: 2px solid var(--accent-purple) !important;
+      box-shadow: 0 0 18px rgba(139, 92, 246, 0.9), inset 0 0 10px rgba(139, 92, 246, 0.6);
+      animation: pulseChallenge 1.4s infinite alternate ease-in-out;
+      z-index: 2;
+    }
+    .tile.challenge-tile::before {
+      content: '🎯'; position: absolute; top: -10px; font-size: 0.85rem;
+      filter: drop-shadow(0 0 4px var(--accent-purple));
+    }
+    @keyframes pulseChallenge {
+      0% { transform: translate(-50%, -50%) scale(0.95); box-shadow: 0 0 10px rgba(139, 92, 246, 0.6); }
+      100% { transform: translate(-50%, -50%) scale(1.15); box-shadow: 0 0 25px rgba(236, 72, 153, 1), inset 0 0 12px rgba(255, 255, 255, 0.8); }
     }
 
-    .btn {
-      background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: all 0.2s;
-      margin: 5px;
-      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+    .tile-num { position: absolute; top: 22px; font-weight: bold; color: #ffffff; font-size: 1rem; text-shadow: 0 1px 3px black, 0 0 5px rgba(0,0,0,0.8); pointer-events: none; }
+
+    .tokens { display: flex; gap: 3px; font-size: 1.25rem; margin-top: 8px; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.9)); z-index: 5; }
+
+    .token-badge {
+      display: inline-flex; align-items: center; justify-content: center; width: 35px; height: 35px; border-radius: 50%;
+      background: rgba(15, 23, 42, 0.85); border: 2px solid var(--accent-gold); overflow: hidden; animation: bounce 0.4s ease infinite alternate;
+    }
+    .token-badge img { width: 100%; height: 100%; object-fit: contain; }
+
+    @keyframes bounce { 0% { transform: translateY(0); } 100% { transform: translateY(-4px); } }
+
+    /* Sidebar HUD */
+    .hud { display: flex; flex-direction: column; gap: 15px; }
+    .hud-box { background: #0f172a; border-radius: 14px; padding: 16px; border: 1px solid #334155; }
+    
+    .player-card { padding: 12px; border-radius: 10px; margin-bottom: 10px; background: #1e293b; border: 2px solid transparent; transition: all 0.35s ease; }
+    .player-card.active { border-color: var(--accent-gold); background: rgba(245, 158, 11, 0.12); box-shadow: 0 0 15px rgba(245, 158, 11, 0.3); }
+    
+    .player-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+    .player-card-icon { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; overflow: visible; }
+    .player-card-icon img { width: 40px; height: 40px; object-fit: contain; transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+    #p1-card.active .player-card-icon img { transform: scale(2); filter: drop-shadow(0 0 10px var(--accent-cyan)) drop-shadow(0 0 3px #ffffff); }
+    #p2-card.active .player-card-icon img { transform: scale(2); filter: drop-shadow(0 0 10px var(--accent-orange)) drop-shadow(0 0 3px #ffffff); }
+
+    .player-card-name { font-weight: bold; font-size: 1rem; color: #f8fafc; }
+    .player-card-title { font-size: 0.75rem; color: var(--accent-cyan); display: block; }
+
+    /* Inventory Items Display */
+    .inventory-bar { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .inv-item-btn {
+      background: #0f172a; border: 1px solid #475569; border-radius: 6px;
+      padding: 4px 8px; font-size: 0.75rem; color: white; display: flex; align-items: center; gap: 4px;
+    }
+    .inv-item-btn:hover:not(:disabled) { border-color: var(--accent-gold); background: #334155; }
+    .inv-item-btn.active-buff { border-color: var(--accent-green); background: rgba(16, 185, 129, 0.2); animation: pulse 1s infinite alternate; }
+
+    .dice-btn { width: 100%; padding: 15px; font-size: 1.25rem; background: linear-gradient(135deg, var(--accent-gold), #d97706); color: #0f172a; font-weight: bold; border-radius: 10px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3); margin-top: 10px; }
+    .shop-open-btn { width: 100%; padding: 10px; font-size: 0.95rem; background: linear-gradient(135deg, var(--accent-purple), #6d28d9); color: white; font-weight: bold; border-radius: 10px; margin-top: 10px; }
+
+    /* 3D DICE SYSTEM */
+    .dice-scene { width: 110px; height: 110px; margin: 15px auto 5px; perspective: 600px; position: relative; display: flex; justify-content: center; align-items: center; }
+    .cube { width: 70px; height: 70px; position: relative; transform-style: preserve-3d; transition: transform 2.2s cubic-bezier(0.1, 0.88, 0.25, 1.12); transform: rotateX(-22deg) rotateY(-35deg); }
+    .cube-face { position: absolute; width: 70px; height: 70px; background: linear-gradient(145deg, #1e293b, #0f172a); border: 2px solid var(--accent-gold); border-radius: 14px; box-shadow: inset 0 0 10px rgba(245, 158, 11, 0.3); display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 6px; box-sizing: border-box; backface-visibility: hidden; }
+    .pip { display: block; background: var(--accent-gold); border-radius: 50%; width: 11px; height: 11px; margin: auto; box-shadow: 0 0 6px var(--accent-gold); }
+    
+    .cube-face.face-1 { transform: rotateY(  0deg) translateZ(35px); }
+    .cube-face.face-6 { transform: rotateY(180deg) translateZ(35px); }
+    .cube-face.face-3 { transform: rotateY( 90deg) translateZ(35px); }
+    .cube-face.face-4 { transform: rotateY(-90deg) translateZ(35px); }
+    .cube-face.face-2 { transform: rotateX( 90deg) translateZ(35px); }
+    .cube-face.face-5 { transform: rotateX(-90deg) translateZ(35px); }
+    .cube-face.face-1 .pip { width: 16px; height: 16px; background: var(--accent-orange); box-shadow: 0 0 10px var(--accent-orange); }
+
+    .dice-shadow { position: absolute; bottom: -10px; width: 65px; height: 18px; background: rgba(0, 0, 0, 0.65); border-radius: 50%; filter: blur(6px); transition: all 2.2s ease-out; transform: scale(1); }
+    .rolling-shadow { animation: shadowJump 2.2s ease-out; }
+    @keyframes shadowJump { 0% { transform: scale(1); opacity: 0.8; } 20% { transform: scale(0.4); opacity: 0.2; } 80% { transform: scale(0.6); opacity: 0.4; } 100% { transform: scale(1); opacity: 0.8; } }
+
+    /* MODAL DIALOGS */
+    .modal { 
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+      background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(8px); 
+      display: flex; justify-content: center; align-items: center; z-index: 100; 
+      animation: fadeIn 0.3s ease-out;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal-card { 
+      background: linear-gradient(165deg, #1e293b 0%, #0f172a 100%); 
+      padding: 28px; border-radius: 24px; text-align: center; 
+      width: 480px; max-width: 92%; 
+      border: 2px solid var(--accent-cyan); 
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 30px rgba(6, 182, 212, 0.3); 
+      animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative; overflow: hidden;
+    }
+    @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+    /* SHOP STYLES */
+    .shop-modal-card { width: 620px; text-align: left; }
+    .shop-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 12px; }
+    .shop-title { color: var(--accent-gold); font-size: 1.6rem; display: flex; align-items: center; gap: 8px; }
+    .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; max-height: 60vh; overflow-y: auto; padding-right: 4px; }
+    .shop-item-card {
+      background: #0f172a; border: 1px solid #334155; border-radius: 14px; padding: 14px;
+      display: flex; flex-direction: column; justify-content: space-between; transition: all 0.25s ease;
+    }
+    .shop-item-card:hover { border-color: var(--accent-purple); transform: translateY(-2px); }
+    .shop-item-info strong { font-size: 1.05rem; color: #f8fafc; display: block; margin-bottom: 4px; }
+    .shop-item-info p { font-size: 0.78rem; color: #94a3b8; line-height: 1.3; }
+    .shop-item-buy { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+    .shop-price { font-weight: bold; color: var(--accent-gold); font-size: 0.95rem; }
+    .btn-buy { background: linear-gradient(135deg, var(--accent-gold), #d97706); color: #0f172a; padding: 6px 14px; font-size: 0.85rem; border-radius: 8px; }
+
+    .badge-group { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+
+    .realm-badge {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px;
+      font-size: 0.85rem; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;
+      background: rgba(6, 182, 212, 0.15); border: 1px solid var(--accent-cyan); color: var(--accent-cyan);
     }
 
-    .btn:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(6, 182, 212, 0.5);
+    .special-bonus-badge {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px;
+      font-size: 0.85rem; font-weight: bold;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(236, 72, 153, 0.3)); 
+      border: 1px solid var(--accent-gold); color: var(--accent-gold);
+      animation: bonusPulse 1s infinite alternate;
+    }
+    @keyframes bonusPulse { 0% { transform: scale(1); } 100% { transform: scale(1.06); } }
+
+    .choice-container { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }
+    .choice-btn {
+      display: flex; justify-content: space-between; align-items: center; padding: 14px 18px;
+      border-radius: 12px; font-size: 1rem; color: white; text-align: left; border: 1px solid rgba(255,255,255,0.1);
+    }
+    .choice-btn:hover { transform: translateY(-3px) scale(1.02); }
+    .choice-easy { background: linear-gradient(135deg, #10b981, #047857); }
+    .choice-hard { background: linear-gradient(135deg, #f59e0b, #b45309); }
+    .choice-duel { background: linear-gradient(135deg, #ef4444, #b91c1c); animation: duelGlow 1.2s infinite alternate; }
+    @keyframes duelGlow { 0% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); } 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.9); } }
+
+    .choice-multiplier { font-size: 1.1rem; font-weight: 800; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 20px; }
+
+    .timer-container {
+      background: rgba(15, 23, 42, 0.9); border: 1px solid #334155; border-radius: 12px;
+      padding: 8px 12px; margin-bottom: 16px; position: relative; overflow: hidden;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .timer-info { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: bold; color: #94a3b8; }
+    .timer-count-badge { font-size: 1.1rem; color: var(--accent-gold); font-weight: 800; }
+    .timer-progress-bg { width: 100%; height: 8px; background: #0f172a; border-radius: 4px; overflow: hidden; border: 1px solid #334155; }
+    .timer-progress-bar { height: 100%; width: 100%; background: var(--accent-cyan); transition: width 1s linear, background-color 0.3s ease; }
+
+    .timer-container.urgent .timer-count-badge { color: var(--accent-red); animation: timerPulse 0.5s infinite alternate; }
+    .timer-container.urgent .timer-progress-bar { background: var(--accent-red); }
+    @keyframes timerPulse { 0% { transform: scale(1); } 100% { transform: scale(1.2); } }
+
+    .question-box {
+      background: rgba(15, 23, 42, 0.7); border: 1px solid #334155; border-radius: 16px;
+      padding: 18px; margin-bottom: 22px; box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .question-label { font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 6px; text-transform: uppercase; }
+    .question-text { font-size: 2.6rem; color: #ffffff; font-weight: 800; text-shadow: 0 0 12px rgba(255, 255, 255, 0.4); }
+
+    .input-wrapper { position: relative; margin-bottom: 20px; }
+    .modal-card input { 
+      width: 100%; padding: 14px; font-size: 1.5rem; font-weight: bold;
+      border-radius: 12px; border: 2px solid #475569; background: #0f172a; color: white; 
+      text-align: center; outline: none; transition: all 0.3s ease;
+    }
+    .modal-card input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 15px rgba(6, 182, 212, 0.4); }
+
+    .btn-submit {
+      width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold; border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent-cyan), #0284c7); color: white;
+      box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4); text-transform: uppercase;
     }
 
-    .btn:disabled {
-      background: #475569;
-      cursor: not-allowed;
-      box-shadow: none;
+    /* Solution Screen */
+    .result-icon-container { width: 110px; height: 110px; margin: 0 auto 12px; display: flex; justify-content: center; align-items: center; position: relative; }
+    .result-title { font-size: 1.8rem; font-weight: bold; margin-bottom: 15px; }
+
+    .solution-box {
+      background: rgba(15, 23, 42, 0.8); border-radius: 14px; padding: 16px;
+      margin-bottom: 20px; border: 1px solid #334155; text-align: left;
+    }
+    .solution-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 0.95rem; color: #94a3b8; }
+    .solution-item strong { font-size: 1.1rem; font-weight: bold; }
+    .user-ans { color: #f8fafc; }
+    .correct-ans { color: var(--accent-green); }
+
+    .reward-box {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      background: rgba(245, 158, 11, 0.2); border: 1px solid var(--accent-gold); color: var(--accent-gold);
+      padding: 10px 20px; border-radius: 30px; font-weight: bold; font-size: 1.2rem;
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.3); margin-bottom: 22px;
+      animation: pulse 1.2s infinite alternate;
+    }
+    @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
+
+    .modal-card.correct-mode { border-color: var(--accent-green); box-shadow: 0 0 40px rgba(16, 185, 129, 0.5); }
+    .modal-card.correct-mode .result-title { color: var(--accent-green); }
+
+    .modal-card.incorrect-mode { 
+      border-color: var(--accent-red); box-shadow: 0 0 40px rgba(239, 68, 68, 0.5); 
+      animation: shake 0.4s ease-in-out;
+    }
+    .modal-card.incorrect-mode .result-title { color: var(--accent-red); }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
     }
 
-    .btn-secondary {
-      background: linear-gradient(135deg, var(--accent-purple), #7c3aed);
-      box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+    .btn-next {
+      width: 100%; padding: 15px; font-size: 1.1rem; font-weight: bold; border-radius: 12px;
+      background: linear-gradient(135deg, #475569, #334155); color: white;
     }
+    .correct-mode .btn-next { background: linear-gradient(135deg, var(--accent-green), #059669); }
 
-    .btn-danger {
-      background: linear-gradient(135deg, var(--accent-rose), #e11d48);
-    }
+    /* SVG Animations */
+    .firework-svg, .explosion-svg { width: 100%; height: 100%; overflow: visible; }
+    .firework-spark { transform-origin: center; animation: fireworkBurst 1.2s cubic-bezier(0.1, 0.8, 0.3, 1) infinite; }
+    .firework-star { animation: sparkle 0.8s ease-in-out infinite alternate; }
+    @keyframes fireworkBurst { 0% { transform: scale(0.2); opacity: 0; } 50% { opacity: 1; } 100% { transform: scale(1.3); opacity: 0; } }
+    @keyframes sparkle { 0% { opacity: 0.3; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1.2); } }
 
-    input[type="text"] {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-      background: #0f172a;
-      color: white;
-      font-size: 1rem;
-      text-align: center;
-    }
-
-    /* Layout Header */
-    header {
-      width: 100%;
-      max-width: 1100px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 20px;
-      background: var(--panel-bg);
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-      margin-bottom: 15px;
-    }
-
-    .player-card {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 16px;
-      border-radius: 8px;
-      background: #0f172a;
-      border: 2px solid transparent;
-    }
-
-    .player-card.active {
-      border-color: var(--accent-amber);
-      box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
-    }
-
-    .avatar-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 1.2rem;
-    }
-
-    /* Board Grid System */
-    .game-container {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      width: 100%;
-      max-width: 1100px;
-      align-items: center;
-    }
-
-    .board-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 8px;
-      width: 100%;
-      background: var(--panel-bg);
-      padding: 15px;
-      border-radius: 16px;
-      border: 1px solid var(--border-color);
-    }
-
-    .tile {
-      aspect-ratio: 1;
-      background: #0f172a;
-      border: 2px solid var(--border-color);
-      border-radius: 10px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-between;
-      padding: 6px;
-      position: relative;
-      font-size: 0.8rem;
-      font-weight: bold;
-    }
-
-    /* Realms Tile Styling */
-    .tile-add { border-color: #3b82f6; }
-    .tile-sub { border-color: #f59e0b; }
-    .tile-mul { border-color: #10b981; }
-    .tile-div { border-color: #ec4899; }
-    .tile-bonus { background: radial-gradient(circle, #3b82f6 0%, #0f172a 100%); border-color: #60a5fa; }
-    .tile-challenge { background: radial-gradient(circle, #8b5cf6 0%, #0f172a 100%); border-color: #a78bfa; }
-
-    .tile-num {
-      position: absolute;
-      top: 4px;
-      left: 6px;
-      color: #94a3b8;
-      font-size: 0.75rem;
-    }
-
-    .tile-icon {
-      font-size: 1.2rem;
-      margin-top: 12px;
-    }
-
-    .pawn-container {
-      display: flex;
-      gap: 4px;
-      position: absolute;
-      bottom: 4px;
-    }
-
-    .pawn {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      border: 2px solid white;
-      box-shadow: 0 0 5px rgba(0,0,0,0.8);
-    }
-
-    .pawn-p1 { background-color: var(--accent-cyan); }
-    .pawn-p2 { background-color: var(--accent-rose); }
-
-    /* Control Panel & 3D Dice */
-    .control-panel {
-      display: flex;
-      width: 100%;
-      justify-content: space-around;
-      align-items: center;
-      background: var(--panel-bg);
-      padding: 15px;
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-    }
-
-    .dice-scene {
-      width: 60px;
-      height: 60px;
-      perspective: 300px;
-    }
-
-    .dice-cube {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      transform-style: preserve-3d;
-      transition: transform 1s ease-out;
-    }
-
-    .dice-face {
-      position: absolute;
-      width: 60px;
-      height: 60px;
-      background: white;
-      border: 2px solid #cbd5e1;
-      border-radius: 8px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: #0f172a;
-    }
-
-    .face-1 { transform: rotateY(0deg) translateZ(30px); }
-    .face-2 { transform: rotateY(90deg) translateZ(30px); }
-    .face-3 { transform: rotateY(180deg) translateZ(30px); }
-    .face-4 { transform: rotateY(-90deg) translateZ(30px); }
-    .face-5 { transform: rotateX(90deg) translateZ(30px); }
-    .face-6 { transform: rotateX(-90deg) translateZ(30px); }
-
-    /* Shop Modal */
-    .shop-items {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin: 15px 0;
-    }
-
-    .shop-item {
-      background: #0f172a;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 10px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .shop-item:hover {
-      border-color: var(--accent-amber);
-    }
-
-    /* Feedback Animations */
-    .feedback-overlay {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      border-radius: 16px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 4rem;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .feedback-show { opacity: 1; }
+    .exp-blast { transform-origin: center; animation: expBlast 0.8s cubic-bezier(0.1, 0.9, 0.2, 1) infinite; }
+    .exp-flame { transform-origin: center; animation: flameFlicker 0.4s ease-in-out infinite alternate; }
+    .exp-shockwave { transform-origin: center; animation: shockwave 0.9s cubic-bezier(0, 0.6, 0.4, 1) infinite; }
+    @keyframes expBlast { 0% { transform: scale(0.3); opacity: 0.2; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 0.9; } }
+    @keyframes flameFlicker { 0% { transform: scale(0.9) rotate(-3deg); fill: #f97316; } 100% { transform: scale(1.15) rotate(4deg); fill: #ef4444; } }
+    @keyframes shockwave { 0% { transform: scale(0.2); opacity: 1; stroke-width: 6; } 100% { transform: scale(1.6); opacity: 0; stroke-width: 1; } }
   </style>
 </head>
 <body>
 
-  <!-- ==========================================
-       LOBBY / ROOM JOIN MODAL
-       ========================================== -->
-  <div id="lobby-modal" class="modal-overlay">
-    <div class="modal-card">
-      <h2 style="color: var(--accent-cyan); margin-bottom: 10px;">🎲 INTEGER ADVENTURE</h2>
-      <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 15px;">เกมการศึกษาคณิตศาสตร์ออนไลน์เรียลไทม์</p>
+  <!-- 1. MAIN MENU VIEW -->
+  <div id="view-menu" class="view">
+    <div class="menu-container">
+      <h1 class="menu-title">⚔️ INTEGER ADVENTURE ⚔️</h1>
+      <p class="menu-subtitle">🤖 ศึกสงครามหุ่นนักรบ พิชิตอาณาจักรจำนวนเต็ม (Online)</p>
       
-      <input type="text" id="player-name" placeholder="ใส่ชื่อของคุณ..." maxlength="12">
-      <input type="text" id="room-code-input" placeholder="รหัสห้อง (เช่น ROOM123)" style="text-transform: uppercase;">
-      
-      <div style="margin-top: 15px;">
-        <button class="btn" onclick="joinRoom('P1')">สร้างห้อง / เป็น Host (P1)</button>
-        <button class="btn btn-secondary" onclick="joinRoom('P2')">เข้าร่วมห้อง (P2)</button>
+      <button class="menu-btn" onclick="startOnlineGame('create')">🌐 สร้างห้องใหม่ (Host P1)</button>
+      <button class="menu-btn join" onclick="startOnlineGame('join')">🔑 เข้าร่วมห้องออนไลน์ (Join P2)</button>
+      <button class="menu-btn spec" onclick="startOnlineGame('spectate')">👁️ โหมดสังเกตการณ์ (Spectator View)</button>
+      <button class="menu-btn hof" onclick="showHOF()">🏆 หอเกียรติยศ (Hall of Fame)</button>
+    </div>
+  </div>
+
+  <!-- 2. CHARACTER SELECTION VIEW -->
+  <div id="view-char-select" class="view hidden">
+    <div id="room-code-display-lobby" class="room-badge-banner">
+      <span>🔑 รหัสห้องของคุณ: <span id="current-room-id" style="color:var(--accent-gold); font-size:1.3rem;">----</span></span>
+      <span id="role-status-text" style="font-size:0.9rem; color:#cbd5e1;"></span>
+    </div>
+
+    <div class="char-select-header">
+      <h2 class="char-select-title">🤖 เลือกหุ่นนักรบประจำตัว</h2>
+      <p style="color:#94a3b8; font-size:0.95rem; margin-top:5px;">ตั้งชื่อและเลือกยูนิตหุ่นยนต์ก่อนลงสู่สมรภูมิออนไลน์</p>
+    </div>
+
+    <div class="char-select-grid">
+      <div id="p1-select-box" class="player-select-box p1-box">
+        <span class="player-title-tag p1-tag">🎮 ผู้เล่นคนแรก (P1 - Host)</span>
+        <div class="name-input-group">
+          <label for="p1-name-input">ชื่อนักรบ P1:</label>
+          <input type="text" id="p1-name-input" class="name-input" value="นักรบสปาร์ก" placeholder="กรอกชื่อผู้เล่น 1" onchange="syncLobbyPlayerState()">
+        </div>
+        <label style="font-size:0.85rem; color:#94a3b8;">เลือกยูนิตหุ่นยนต์:</label>
+        <div class="robot-grid" id="p1-robot-grid"></div>
+      </div>
+
+      <div id="p2-select-box" class="player-select-box p2-box">
+        <span class="player-title-tag p2-tag">🎮 ผู้เล่นคนที่สอง (P2 - Guest)</span>
+        <div class="name-input-group">
+          <label for="p2-name-input">ชื่อนักรบ P2:</label>
+          <input type="text" id="p2-name-input" class="name-input" value="จักรกลไซบอร์ก" placeholder="กรอกชื่อผู้เล่น 2" onchange="syncLobbyPlayerState()">
+        </div>
+        <label style="font-size:0.85rem; color:#94a3b8;">เลือกยูนิตหุ่นยนต์:</label>
+        <div class="robot-grid" id="p2-robot-grid"></div>
+      </div>
+    </div>
+
+    <button id="btn-start-game" class="start-battle-btn" onclick="confirmStartGame()">🚀 พร้อมลุย! เริ่มการแข่งขัน</button>
+    <div style="text-align: center; margin-top: 15px;">
+      <button onclick="showMenu()" style="background: transparent; color: #94a3b8; padding: 6px 16px; font-size: 0.9rem;">⬅️ กลับเมนูหลัก</button>
+    </div>
+  </div>
+
+  <!-- 3. HALL OF FAME VIEW -->
+  <div id="view-hof" class="view hidden">
+    <div class="hof-header">
+      <h2>🏆 หอเกียรติยศหุ่นนักรบประจำวิชา</h2>
+      <button onclick="showMenu()" style="padding: 8px 16px; background: #475569; color: white;">⬅️ เมนูหลัก</button>
+    </div>
+    <div class="podium">
+      <div class="podium-card r2"><div>🥈</div><strong id="hof-name-2">-</strong><div style="color:var(--accent-blue)" id="hof-score-2">0 💎</div></div>
+      <div class="podium-card r1"><div>👑</div><strong id="hof-name-1">-</strong><div style="color:var(--accent-gold)" id="hof-score-1">0 💎</div></div>
+      <div class="podium-card r3"><div>🥉</div><strong id="hof-name-3">-</strong><div style="color:#cd7f32" id="hof-score-3">0 💎</div></div>
+    </div>
+    <table class="hof-table">
+      <thead><tr><th>อันดับ</th><th>ชื่อหุ่นนักรบ</th><th>ยูนิต</th><th>คะแนน Crystal</th></tr></thead>
+      <tbody id="hof-list"></tbody>
+    </table>
+  </div>
+
+  <!-- 4. GAME VIEW -->
+  <div id="view-game" class="view hidden">
+    <div class="room-badge-banner">
+      <span>🔑 รหัสห้องออนไลน์: <span id="game-room-id" style="color:var(--accent-gold); font-size:1.3rem;">----</span></span>
+      <span id="my-role-badge" style="font-size:0.9rem; background:rgba(255,255,255,0.2); padding:3px 10px; border-radius:12px;"></span>
+    </div>
+
+    <div class="game-layout">
+      <div class="board-frame">
+        <div id="board-grid" class="board-grid"></div>
+      </div>
+
+      <div class="hud">
+        <div class="hud-box">
+          <h3 style="color:var(--accent-cyan); font-size:1.1rem; margin-bottom:10px;">สถานะยูนิตหุ่นรบ</h3>
+          
+          <div id="p1-card" class="player-card active">
+            <div class="player-card-header">
+              <span id="p1-card-icon" class="player-card-icon"></span>
+              <div>
+                <span id="p1-card-name" class="player-card-name">ผู้เล่น 1</span>
+                <span id="p1-card-title" class="player-card-title">TITAN-01</span>
+              </div>
+            </div>
+            <div style="font-size:0.9rem; margin-top:5px;">Crystal: <span id="p1-crystal" style="color:var(--accent-gold); font-weight:bold;">0</span> 💎</div>
+            <div class="inventory-bar" id="p1-inventory"></div>
+          </div>
+
+          <div id="p2-card" class="player-card">
+            <div class="player-card-header">
+              <span id="p2-card-icon" class="player-card-icon"></span>
+              <div>
+                <span id="p2-card-name" class="player-card-name">ผู้เล่น 2</span>
+                <span id="p2-card-title" class="player-card-title">MECHA-REX</span>
+              </div>
+            </div>
+            <div style="font-size:0.9rem; margin-top:5px;">Crystal: <span id="p2-crystal" style="color:var(--accent-gold); font-weight:bold;">0</span> 💎</div>
+            <div class="inventory-bar" id="p2-inventory"></div>
+          </div>
+        </div>
+
+        <div class="hud-box" style="text-align: center;">
+          <div id="turn-display" style="font-weight:bold; font-size:1rem; color:var(--accent-gold); margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:6px;">ตาของ: ผู้เล่น 1</div>
+          
+          <div class="dice-scene">
+            <div id="cube" class="cube">
+              <div class="cube-face face-1"><div></div><div></div><div></div><div></div><div class="pip"></div><div></div><div></div><div></div><div></div></div>
+              <div class="cube-face face-2"><div class="pip"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="pip"></div></div>
+              <div class="cube-face face-3"><div class="pip"></div><div></div><div></div><div></div><div class="pip"></div><div></div><div></div><div></div><div class="pip"></div></div>
+              <div class="cube-face face-4"><div class="pip"></div><div></div><div class="pip"></div><div></div><div></div><div></div><div class="pip"></div><div></div><div class="pip"></div></div>
+              <div class="cube-face face-5"><div class="pip"></div><div></div><div class="pip"></div><div></div><div class="pip"></div><div></div><div class="pip"></div><div></div><div class="pip"></div></div>
+              <div class="cube-face face-6"><div class="pip"></div><div></div><div class="pip"></div><div class="pip"></div><div></div><div class="pip"></div><div class="pip"></div><div></div><div class="pip"></div></div>
+            </div>
+            <div id="dice-shadow" class="dice-shadow"></div>
+          </div>
+
+          <button id="btn-roll" class="dice-btn" onclick="rollDice()">🎲 ทอยลูกเต๋า</button>
+          <button id="btn-open-shop" class="shop-open-btn" onclick="openShopModal(false)">🛒 ร้านค้าคริสตัล</button>
+        </div>
+
+        <button onclick="showMenu()" style="background:#dc2626; color:white; padding:12px; font-size:0.95rem; border-radius:10px;">🚪 ออกจากเกม</button>
       </div>
     </div>
   </div>
 
-  <!-- ==========================================
-       MAIN GAME INTERFACE
-       ========================================== -->
-  <header>
-    <div id="p1-card" class="player-card">
-      <div class="avatar-icon" style="background: var(--accent-cyan);">🤖</div>
-      <div>
-        <div id="p1-name-display" style="font-weight: bold;">P1: รอผู้เล่น...</div>
-        <div style="font-size: 0.8rem; color: #94a3b8;">💎 <span id="p1-crystals">0</span> Crystals</div>
-      </div>
-    </div>
-
-    <div style="text-align: center;">
-      <div style="font-size: 0.8rem; color: #94a3b8;">ROOM CODE</div>
-      <div id="room-code-display" style="font-weight: bold; color: var(--accent-amber); font-size: 1.2rem;">-</div>
-    </div>
-
-    <div id="p2-card" class="player-card">
-      <div class="avatar-icon" style="background: var(--accent-rose);">👾</div>
-      <div>
-        <div id="p2-name-display" style="font-weight: bold;">P2: รอผู้เล่น...</div>
-        <div style="font-size: 0.8rem; color: #94a3b8;">💎 <span id="p2-crystals">0</span> Crystals</div>
-      </div>
-    </div>
-  </header>
-
-  <div class="game-container">
-    <!-- Board Grid (42 Tiles) -->
-    <div id="board" class="board-grid"></div>
-
-    <!-- Controls -->
-    <div class="control-panel">
-      <div>
-        <div style="font-size: 0.8rem; color: #94a3b8;">ตาทั้งหมดของคุณ</div>
-        <div id="turn-indicator" style="font-weight: bold; color: var(--accent-cyan);">รอเริ่มเกม...</div>
+  <!-- 🛒 CRYSTAL SHOP MODAL -->
+  <div id="shop-modal" class="modal hidden">
+    <div class="modal-card shop-modal-card">
+      <div class="shop-header">
+        <h2 class="shop-title">🛒 ร้านค้าแลกคริสตัล (Crystal Shop)</h2>
+        <button onclick="closeShopModal()" style="background:#475569; color:white; padding:6px 14px; border-radius:8px;">❌ ปิด</button>
       </div>
 
-      <!-- 3D Dice -->
-      <div class="dice-scene">
-        <div id="dice-cube" class="dice-cube">
-          <div class="dice-face face-1">1</div>
-          <div class="dice-face face-2">2</div>
-          <div class="dice-face face-3">3</div>
-          <div class="dice-face face-4">4</div>
-          <div class="dice-face face-5">5</div>
-          <div class="dice-face face-6">6</div>
-        </div>
+      <div style="margin-bottom: 15px; background: #0f172a; padding: 10px 14px; border-radius: 10px; border: 1px solid #334155; display:flex; justify-content:space-between; align-items:center;">
+        <div>ผู้ซื้อปัจจุบัน: <strong id="shop-player-name" style="color:var(--accent-cyan)">-</strong></div>
+        <div>คริสตัลสะสม: <strong id="shop-player-crystals" style="color:var(--accent-gold)">0</strong> 💎</div>
       </div>
 
-      <div>
-        <button id="roll-btn" class="btn" onclick="rollDice()" disabled>🎲 ทอดลูกเต๋า</button>
-        <button class="btn btn-secondary" onclick="openShop()">🛒 ร้านค้า</button>
-      </div>
+      <div id="shop-items-grid" class="shop-grid"></div>
     </div>
   </div>
 
-  <!-- ==========================================
-       QUESTION MODAL
-       ========================================== -->
-  <div id="question-modal" class="modal-overlay hidden">
-    <div class="modal-card">
-      <div id="feedback-overlay" class="feedback-overlay"></div>
-      <h3 id="realm-title" style="color: var(--accent-cyan);">อาณาจักรคำถาม</h3>
-      <div id="timer-bar" style="height: 4px; background: var(--accent-cyan); width: 100%; margin: 10px 0; transition: width 1s linear;"></div>
+  <!-- ⚔️ QUESTION & SOLUTION MODAL WITH CHOICE & TIMER -->
+  <div id="question-modal" class="modal hidden">
+    <div id="modal-card" class="modal-card">
       
-      <p id="question-text" style="font-size: 1.8rem; font-weight: bold; margin: 20px 0;">? + ? = ?</p>
-      
-      <input type="number" id="answer-input" placeholder="คำตอบของคุณ..." style="font-size: 1.2rem; text-align: center;">
-      <button class="btn" onclick="submitAnswer()">ส่งคำตอบ</button>
-    </div>
-  </div>
+      <!-- MODE 1: เลือกความท้าทาย -->
+      <div id="modal-choice-view" class="hidden">
+        <h2 style="color:var(--accent-purple); font-size:1.6rem; margin-bottom:6px;">🎯 ช่องท้าดวลระดับพลัง!</h2>
+        <p style="color:#94a3b8; font-size:0.9rem; margin-bottom:15px;">เลือกระดับความยากของโจทย์เพื่อรับโบนัส Crystal ทวีคูณ</p>
+        
+        <div class="choice-container">
+          <button id="btn-choice-easy" class="choice-btn choice-easy" onclick="selectChallenge('easy')">
+            <div>
+              <strong>🟢 แบบง่าย (Easy)</strong>
+              <div style="font-size:0.75rem; opacity:0.85;">โจทย์พื้นฐาน คิดได้รวดเร็ว</div>
+            </div>
+            <span class="choice-multiplier">x1</span>
+          </button>
 
-  <!-- ==========================================
-       SHOP MODAL
-       ========================================== -->
-  <div id="shop-modal" class="modal-overlay hidden">
-    <div class="modal-card">
-      <h3>🛒 ร้านค้าไอเทมช่วยเหลือ</h3>
-      <div class="shop-items">
-        <div class="shop-item" onclick="buyItem('shield', 50)">
-          <div style="font-size: 1.5rem;">🛡️</div>
-          <strong>เกราะป้องกัน</strong>
-          <div style="font-size: 0.8rem; color: #94a3b8;">ป้องกันตอบผิด 1 ครั้ง</div>
-          <div style="color: var(--accent-amber); margin-top: 5px;">💎 50</div>
-        </div>
-        <div class="shop-item" onclick="buyItem('extraTime', 30)">
-          <div style="font-size: 1.5rem;">⏱️</div>
-          <strong>ยืดเวลา</strong>
-          <div style="font-size: 0.8rem; color: #94a3b8;">+5 วินาทีในการตอบ</div>
-          <div style="color: var(--accent-amber); margin-top: 5px;">💎 30</div>
-        </div>
-        <div class="shop-item" onclick="buyItem('doubleCrystal', 40)">
-          <div style="font-size: 1.5rem;">✨</div>
-          <strong>คริสตัล x2</strong>
-          <div style="font-size: 0.8rem; color: #94a3b8;">รับคริสตัลสองเท่าในข้อถัดไป</div>
-          <div style="color: var(--accent-amber); margin-top: 5px;">💎 40</div>
-        </div>
-        <div class="shop-item" onclick="buyItem('turbo', 60)">
-          <div style="font-size: 1.5rem;">🚀</div>
-          <strong>เทอร์โบบูสต์</strong>
-          <div style="font-size: 0.8rem; color: #94a3b8;">เดินหน้าทันที +3 ช่อง</div>
-          <div style="color: var(--accent-amber); margin-top: 5px;">💎 60</div>
+          <button id="btn-choice-hard" class="choice-btn choice-hard" onclick="selectChallenge('hard')">
+            <div>
+              <strong>🟡 แบบยาก (Hard)</strong>
+              <div style="font-size:0.75rem; opacity:0.85;">โจทย์ระดับปานกลาง ตัวเลขมากขึ้น</div>
+            </div>
+            <span class="choice-multiplier">x2</span>
+          </button>
+
+          <button id="btn-choice-duel" class="choice-btn choice-duel" onclick="selectChallenge('duel')">
+            <div>
+              <strong>🔥 การท้าดวล (Duel)</strong>
+              <div style="font-size:0.75rem; opacity:0.85;">โจทย์ท้าทายระดับมหาโหด!</div>
+            </div>
+            <span class="choice-multiplier">x3</span>
+          </button>
         </div>
       </div>
-      <button class="btn btn-danger" onclick="closeShop()">ปิด</button>
+
+      <!-- MODE 2: หน้าต่างโจทย์คำถาม -->
+      <div id="modal-question-view" class="hidden">
+        <div class="badge-group">
+          <span id="modal-realm-tag" class="realm-badge">⚔️ ด่านบวก (Addition)</span>
+          <span id="modal-bonus-badge" class="special-bonus-badge hidden">✨ ช่องโบนัสพิเศษ (Crystal x2!)</span>
+        </div>
+        
+        <div id="timer-box" class="timer-container">
+          <div class="timer-info">
+            <span>⏱️ เวลาในการตอบ:</span>
+            <span class="timer-count-badge"><span id="timer-count">5</span> วินาที</span>
+          </div>
+          <div class="timer-progress-bg">
+            <div id="timer-bar" class="timer-progress-bar"></div>
+          </div>
+        </div>
+
+        <div class="question-box">
+          <span class="question-label">คำนวณรหัสพลังงานหุ่นยนต์</span>
+          <h2 id="q-text" class="question-text">12 + 5 = ?</h2>
+        </div>
+
+        <div class="input-wrapper">
+          <input type="number" id="q-answer" placeholder="ป้อนคำตอบที่นี่..." autofocus autocomplete="off">
+        </div>
+
+        <button id="btn-submit-ans" onclick="submitAnswer()" class="btn-submit">⚡ ยืนยันคำตอบ (Enter)</button>
+      </div>
+
+      <!-- MODE 3: หน้าต่างเฉลย -->
+      <div id="modal-result-view" class="hidden">
+        <div id="result-animation-box" class="result-icon-container"></div>
+        <h3 id="result-title" class="result-title">ถูกต้องแม่นยำ!</h3>
+
+        <div class="solution-box">
+          <div class="solution-item">
+            <span>คำตอบของผู้เล่น:</span>
+            <strong id="user-ans-display" class="user-ans">17</strong>
+          </div>
+          <div class="solution-item">
+            <span>เฉลยคำตอบที่ถูกต้อง:</span>
+            <strong id="correct-ans-display" class="correct-ans">17</strong>
+          </div>
+        </div>
+
+        <div id="result-reward" class="reward-box">
+          +10 Crystal 💎
+        </div>
+
+        <button id="btn-next-turn" onclick="nextTurnAfterResult()" class="btn-next">➡️ ดำเนินการต่อ</button>
+      </div>
+
     </div>
   </div>
 
-  <!-- ==========================================
-       GAME SCRIPT & FIREBASE INTEGRATION
-       ========================================== -->
   <script>
-    // ------------------------------------------
-    // 1. FIREBASE CONFIGURATION
-    // ------------------------------------------
+    // ===================================================
+    // 🔥 FIREBASE REALTIME DATABASE CONFIGURATION
+    // ===================================================
     const firebaseConfig = {
       apiKey: "AIzaSyAdORfy_7-KYik4Iak808g0o8cwQaav9dI",
       authDomain: "clever-tube-503313-b7.firebaseapp.com",
@@ -473,331 +639,835 @@
       measurementId: "G-4H9F6ECJD6"
     };
 
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    } else {
-      firebase.app();
-    }
-    const database = firebase.database();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    // ------------------------------------------
-    // 2. GAME STATE VARIABLES
-    // ------------------------------------------
-    let localRole = null; // 'P1', 'P2', or 'SPECTATOR'
-    let currentRoomCode = null;
+    // ONLINE MULTIPLAYER STATE
+    let roomId = null;
+    let myPlayerRole = null; // 'P1', 'P2', or 'SPECTATOR'
+    let myPlayerIndex = -1;  // 0 for P1, 1 for P2, -1 for Spectator
     let roomRef = null;
+
+    // CONFIGURATION
+    const QUESTION_TIME_LIMIT = 5;
+    const SPECIAL_TILES = [9, 18, 27]; 
+    const CHALLENGE_TILES = [4, 15, 32];
+    const BASE_CRYSTAL_REWARD = 10;   
+
+    const SHOP_ITEMS = [
+      { id: 'shield', name: '🛡️ เกราะกันตอบผิด', price: 20, desc: 'ตอบผิดหรือหมดเวลาจะไม่เสียคะแนน/สิทธิ์ในรอบนี้ (ใช้งานอัตโนมัติ)' },
+      { id: 'timeExtender', name: '⏱️ นาฬิกายืดเวลา (+5s)', price: 15, desc: 'เพิ่มเวลาในการทำโจทย์ข้อถัดไปอีก 5 วินาที' },
+      { id: 'doubleCrystal', name: '✨ บูสต์คริสตัล x2', price: 25, desc: 'รับคริสตัล x2 เพิ่มเติมเมื่อตอบถูกในข้อถัดไป' },
+      { id: 'warpBoost', name: '🚀 เทอร์โบบูสต์ (+3 ช่อง)', price: 30, desc: 'เร่งพลังงานเดินหน้าเพิ่มทันที 3 ช่อง (กดใช้ก่อนทอยเต๋า)' }
+    ];
+
+    const ROBOT_PRESETS = [
+      { id: 'titan', name: 'TITAN-01', image: 'images/titan.png', desc: 'สายถึกเกราะเหล็ก', title: 'ไททันเหล็กกล้า' },
+      { id: 'mecha', name: 'MECHA-REX', image: 'images/mecha.png', desc: 'หมัดเหล็กจอมทำลาย', title: 'จักรกลหมัดเหล็ก' },
+      { id: 'cyber', name: 'CYBER-SPARK', image: 'images/cyber.png', desc: 'พลังงานพลาสม่า', title: 'ไซเบอร์พลาสม่า' },
+      { id: 'aegis', name: 'AEGIS-PRIME', image: 'images/aegis.png', desc: 'โล่พลังงานไร้พ่าย', title: 'เอจิสเกราะหนัก' },
+      { id: 'magma', name: 'MAGMA-CORE', image: 'images/magma.png', desc: 'หุ่นหลอมเหลวความร้อน', title: 'แมกมาคอร์' },
+      { id: 'chrono', name: 'CHRONO-MECH', image: 'images/chrono.png', desc: 'จักรกลข้ามมิติเวลา', title: 'โครโนเมกะ' }
+    ];
+
+    let p1SelectedRobotIndex = 0;
+    let p2SelectedRobotIndex = 1;
+    const TOTAL_TILES = 42;
+
+    const tilePositions = [
+      { left: 23.6, top: 13.5 }, { left: 29.4, top: 12.3 }, { left: 34.8, top: 11.9 }, { left: 40.4, top: 12.4 }, 
+      { left: 45.9, top: 13.1 }, { left: 51.4, top: 12.9 }, { left: 57.4, top: 12.7 }, { left: 63.1, top: 12.5 }, 
+      { left: 68.8, top: 12.2 }, { left: 74.2, top: 12.0 }, { left: 79.8, top: 13.4 }, { left: 84.8, top: 14.9 }, 
+      { left: 83.6, top: 21.9 }, { left: 84.5, top: 29.9 }, { left: 86.7, top: 37.6 }, { left: 86.7, top: 43.8 }, 
+      { left: 84.4, top: 51.8 }, { left: 84.1, top: 59.1 }, { left: 85.9, top: 66.6 }, { left: 86.3, top: 73.6 }, 
+      { left: 83.7, top: 80.7 }, { left: 79.1, top: 87.8 }, { left: 72.0, top: 86.9 }, { left: 65.4, top: 87.0 }, 
+      { left: 59.6, top: 87.2 }, { left: 54.2, top: 87.6 }, { left: 48.6, top: 88.3 }, { left: 43.5, top: 88.0 }, 
+      { left: 37.9, top: 88.0 }, { left: 32.9, top: 86.9 }, { left: 27.8, top: 86.2 }, { left: 22.4, top: 86.4 }, 
+      { left: 16.7, top: 83.8 }, { left: 10.8, top: 82.8 }, { left: 11.1, top: 70.9 }, { left: 13.2, top: 64.5 }, 
+      { left: 15.5, top: 57.6 }, { left: 16.2, top: 49.8 }, { left: 15.2, top: 42.3 }, { left: 16.6, top: 35.1 }, 
+      { left: 18.2, top: 28.3 }, { left: 20.5, top: 21.5 }
+    ];
+
+    let players = [
+      { id: 0, name: 'ผู้เล่น 1', robotName: 'TITAN-01', image: 'images/titan.png', title: 'ไททันเหล็กกล้า', pos: 1, crystals: 50, inventory: { shield: 0, timeExtender: 0, doubleCrystal: 0, warpBoost: 0 }, activeBuffs: { timeExtender: false, doubleCrystal: false } },
+      { id: 1, name: 'ผู้เล่น 2', robotName: 'MECHA-REX', image: 'images/mecha.png', title: 'จักรกลหมัดเหล็ก', pos: 1, crystals: 50, inventory: { shield: 0, timeExtender: 0, doubleCrystal: 0, warpBoost: 0 }, activeBuffs: { timeExtender: false, doubleCrystal: false } }
+    ];
+    let currentTurn = 0;
+    let currentQuestion = null;
+    let currentMultiplier = 1;
     let timerInterval = null;
-    let currentQuestionObj = null;
+    let timeRemaining = QUESTION_TIME_LIMIT;
+    let currentRotX = -22;
+    let currentRotY = -35;
+    let lastProcessedDiceRoll = 0;
 
-    let gameState = {
-      currentTurn: 'P1',
-      p1: { name: 'Player 1', pos: 1, crystals: 100, shield: false, extraTime: false, doubleCrystal: false },
-      p2: { name: 'Player 2', pos: 1, crystals: 100, shield: false, extraTime: false, doubleCrystal: false },
-      lastDiceRoll: 1
-    };
+    const FIREWORKS_SVG = `<svg class="firework-svg" viewBox="0 0 100 100"><g class="firework-spark"><circle cx="50" cy="10" r="3.5" fill="#f59e0b" /><circle cx="85" cy="25" r="3" fill="#10b981" /><circle cx="90" cy="50" r="3.5" fill="#06b6d4" /><circle cx="80" cy="80" r="4" fill="#3b82f6" /><circle cx="50" cy="90" r="3.5" fill="#ec4899" /><circle cx="20" cy="80" r="3" fill="#8b5cf6" /><circle cx="10" cy="50" r="3.5" fill="#f97316" /><circle cx="20" cy="20" r="4" fill="#facc15" /><line x1="50" y1="50" x2="50" y2="18" stroke="#f59e0b" stroke-width="2" stroke-dasharray="2" /><line x1="50" y1="50" x2="78" y2="28" stroke="#10b981" stroke-width="2" stroke-dasharray="2" /><line x1="50" y1="50" x2="82" y2="50" stroke="#06b6d4" stroke-width="2" stroke-dasharray="2" /><line x1="50" y1="50" x2="72" y2="72" stroke="#3b82f6" stroke-width="2" stroke-dasharray="2" /><line x1="50" y1="50" x2="50" y2="82" stroke="#ec4899" stroke-width="2" stroke-dasharray="2" /><line x1="50" y1="50" x2="28" y2="72" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="2" /><line x1="50" y1="50" x2="18" y2="50" stroke="#f97316" stroke-width="2" stroke-dasharray="2" /><line x1="50" y1="50" x2="28" y2="28" stroke="#facc15" stroke-width="2" stroke-dasharray="2" /></g><polygon class="firework-star" points="50,38 53,46 62,47 55,53 57,62 50,57 43,62 45,53 38,47 47,46" fill="#ffffff" /></svg>`;
+    const EXPLOSION_SVG = `<svg class="explosion-svg" viewBox="0 0 100 100"><circle class="exp-shockwave" cx="50" cy="50" r="35" fill="none" stroke="#ef4444" /><g class="exp-blast"><polygon class="exp-flame" points="50,10 62,35 90,25 72,50 88,78 58,68 50,92 38,68 12,80 26,50 10,25 38,35" fill="#f97316" /><polygon class="exp-flame" points="50,22 58,40 76,32 64,50 74,68 55,60 50,78 42,60 24,68 34,50 22,32 40,40" fill="#facc15" style="animation-delay: 0.2s;" /><circle cx="50" cy="50" r="14" fill="#ffffff" /></g></svg>`;
 
-    // ------------------------------------------
-    // 3. BOARD INITIALIZATION (42 Tiles)
-    // ------------------------------------------
-    function initBoardUI() {
-      const boardElem = document.getElementById('board');
-      boardElem.innerHTML = '';
-
-      for (let i = 1; i <= 42; i++) {
-        const tile = document.createElement('div');
-        tile.className = 'tile';
-        tile.id = `tile-${i}`;
-
-        // Dynamic Realm Styling
-        let realmIcon = '➕';
-        if (i >= 1 && i <= 12) {
-          tile.classList.add('tile-add');
-          realmIcon = '➕';
-        } else if (i >= 13 && i <= 22) {
-          tile.classList.add('tile-sub');
-          realmIcon = '➖';
-        } else if (i >= 23 && i <= 34) {
-          tile.classList.add('tile-mul');
-          realmIcon = '✖️';
-        } else {
-          tile.classList.add('tile-div');
-          realmIcon = '➗';
-        }
-
-        // Special Tiles
-        if ([7, 18, 28, 38].includes(i)) {
-          tile.classList.add('tile-bonus');
-          realmIcon = '💎';
-        } else if ([5, 15, 25, 35].includes(i)) {
-          tile.classList.add('tile-challenge');
-          realmIcon = '⚔️';
-        }
-
-        tile.innerHTML = `
-          <span class="tile-num">${i}</span>
-          <span class="tile-icon">${realmIcon}</span>
-          <div class="pawn-container" id="pawns-${i}"></div>
-        `;
-        boardElem.appendChild(tile);
-      }
-      renderPawns();
+    function getRealm(tileNum) {
+      if (tileNum <= 12) return { name: 'บวก (Addition)', type: 'add', icon: '➕' };
+      if (tileNum <= 22) return { name: 'ลบ (Subtraction)', type: 'sub', icon: '➖' };
+      if (tileNum <= 34) return { name: 'คูณ (Multiplication)', type: 'mul', icon: '✖️' };
+      return { name: 'หาร (Division)', type: 'div', icon: '➗' };
     }
 
-    function renderPawns() {
-      // Clear previous pawns
-      for (let i = 1; i <= 42; i++) {
-        const container = document.getElementById(`pawns-${i}`);
+    function switchView(viewId) {
+      document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+      document.getElementById(viewId).classList.remove('hidden');
+    }
+    function showMenu() { 
+      if(roomRef) roomRef.off();
+      switchView('view-menu'); 
+    }
+    function showHOF() { loadHOFData(); switchView('view-hof'); }
+
+    // ===================================================
+    // 🌐 ONLINE ROOM & SYSTEM LOGIC (FIREBASE RTDB)
+    // ===================================================
+    function startOnlineGame(mode) {
+      if (mode === 'create') {
+        roomId = Math.floor(1000 + Math.random() * 9000).toString();
+        myPlayerRole = 'P1';
+        myPlayerIndex = 0;
+        
+        roomRef = db.ref('rooms/' + roomId);
+        const defaultState = {
+          status: 'lobby',
+          currentTurn: 0,
+          p1RobotIdx: 0,
+          p2RobotIdx: 1,
+          players: players,
+          dice: { outcome: 1, rotX: -22, rotY: -35, timestamp: 0 },
+          questionState: { active: false, mode: 'none' }
+        };
+        roomRef.set(defaultState);
+        setupLobbyUI();
+        listenToRoomChanges();
+
+      } else if (mode === 'join' || mode === 'spectate') {
+        const inputCode = prompt("กรอกรหัสห้อง 4 หลัก:");
+        if (!inputCode) return;
+        roomId = inputCode.trim();
+        roomRef = db.ref('rooms/' + roomId);
+
+        roomRef.once('value', snapshot => {
+          if (!snapshot.exists()) {
+            alert("❌ ไม่พบห้องรหัสนี้ในระบบ!");
+            return;
+          }
+
+          if (mode === 'join') {
+            myPlayerRole = 'P2';
+            myPlayerIndex = 1;
+          } else {
+            myPlayerRole = 'SPECTATOR';
+            myPlayerIndex = -1;
+          }
+
+          setupLobbyUI();
+          listenToRoomChanges();
+        });
+      }
+    }
+
+    function setupLobbyUI() {
+      document.getElementById('current-room-id').innerText = roomId;
+      document.getElementById('game-room-id').innerText = roomId;
+
+      const p1Box = document.getElementById('p1-select-box');
+      const p2Box = document.getElementById('p2-select-box');
+      const startBtn = document.getElementById('btn-start-game');
+      const roleText = document.getElementById('role-status-text');
+
+      p1Box.classList.remove('disabled-box');
+      p2Box.classList.remove('disabled-box');
+
+      if (myPlayerRole === 'P1') {
+        roleText.innerText = "👑 คุณคือ Host (P1) - ควบคุมการตั้งค่า P1";
+        p2Box.classList.add('disabled-box');
+        startBtn.classList.remove('hidden');
+      } else if (myPlayerRole === 'P2') {
+        roleText.innerText = "🎮 คุณคือ ผู้เล่น 2 (P2) - ควบคุมการตั้งค่า P2";
+        p1Box.classList.add('disabled-box');
+        startBtn.classList.add('hidden');
+      } else {
+        roleText.innerText = "👁️ คุณคือ ผู้สังเกตการณ์ (Spectator View)";
+        p1Box.classList.add('disabled-box');
+        p2Box.classList.add('disabled-box');
+        startBtn.classList.add('hidden');
+      }
+
+      renderRobotGrids();
+      switchView('view-char-select');
+    }
+
+    function syncLobbyPlayerState() {
+      if (!roomRef) return;
+      if (myPlayerRole === 'P1') {
+        const p1Name = document.getElementById('p1-name-input').value.trim() || 'ผู้เล่น 1';
+        players[0].name = p1Name;
+        players[0].robotName = ROBOT_PRESETS[p1SelectedRobotIndex].name;
+        players[0].image = ROBOT_PRESETS[p1SelectedRobotIndex].image;
+        players[0].title = ROBOT_PRESETS[p1SelectedRobotIndex].title;
+
+        roomRef.child('p1RobotIdx').set(p1SelectedRobotIndex);
+        roomRef.child('players/0').set(players[0]);
+
+      } else if (myPlayerRole === 'P2') {
+        const p2Name = document.getElementById('p2-name-input').value.trim() || 'ผู้เล่น 2';
+        players[1].name = p2Name;
+        players[1].robotName = ROBOT_PRESETS[p2SelectedRobotIndex].name;
+        players[1].image = ROBOT_PRESETS[p2SelectedRobotIndex].image;
+        players[1].title = ROBOT_PRESETS[p2SelectedRobotIndex].title;
+
+        roomRef.child('p2RobotIdx').set(p2SelectedRobotIndex);
+        roomRef.child('players/1').set(players[1]);
+      }
+    }
+
+    function renderRobotGrids() {
+      const p1Grid = document.getElementById('p1-robot-grid');
+      const p2Grid = document.getElementById('p2-robot-grid');
+
+      p1Grid.innerHTML = ROBOT_PRESETS.map((r, idx) => `
+        <div class="robot-card ${idx === p1SelectedRobotIndex ? 'selected' : ''}" onclick="selectRobot(1, ${idx})">
+          <span class="robot-icon"><img src="${r.image}" alt="${r.name}"></span>
+          <span class="robot-name">${r.name}</span>
+          <span class="robot-desc">${r.desc}</span>
+        </div>
+      `).join('');
+
+      p2Grid.innerHTML = ROBOT_PRESETS.map((r, idx) => `
+        <div class="robot-card ${idx === p2SelectedRobotIndex ? 'selected' : ''}" onclick="selectRobot(2, ${idx})">
+          <span class="robot-icon"><img src="${r.image}" alt="${r.name}"></span>
+          <span class="robot-name">${r.name}</span>
+          <span class="robot-desc">${r.desc}</span>
+        </div>
+      `).join('');
+    }
+
+    function selectRobot(playerNum, index) {
+      if (playerNum === 1 && myPlayerRole !== 'P1') return;
+      if (playerNum === 2 && myPlayerRole !== 'P2') return;
+
+      if (playerNum === 1) p1SelectedRobotIndex = index;
+      else p2SelectedRobotIndex = index;
+
+      renderRobotGrids();
+      syncLobbyPlayerState();
+    }
+
+    function confirmStartGame() {
+      if (myPlayerRole !== 'P1') return;
+      roomRef.update({
+        status: 'playing',
+        players: players,
+        currentTurn: 0
+      });
+    }
+
+    function listenToRoomChanges() {
+      roomRef.on('value', snapshot => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        if (data.p1RobotIdx !== undefined) p1SelectedRobotIndex = data.p1RobotIdx;
+        if (data.p2RobotIdx !== undefined) p2SelectedRobotIndex = data.p2RobotIdx;
+        
+        if (data.players) {
+          players = data.players;
+          if (myPlayerRole !== 'P1' && data.players[0]) {
+            document.getElementById('p1-name-input').value = data.players[0].name;
+          }
+          if (myPlayerRole !== 'P2' && data.players[1]) {
+            document.getElementById('p2-name-input').value = data.players[1].name;
+          }
+        }
+
+        renderRobotGrids();
+
+        if (data.status === 'playing') {
+          if (document.getElementById('view-game').classList.contains('hidden')) {
+            initBoard();
+            switchView('view-game');
+          }
+
+          currentTurn = data.currentTurn;
+          updateHUD();
+          renderTokens();
+
+          if (data.dice && data.dice.timestamp > lastProcessedDiceRoll) {
+            lastProcessedDiceRoll = data.dice.timestamp;
+            animateDiceRoll(data.dice.rotX, data.dice.rotY, data.dice.outcome);
+          }
+
+          syncQuestionModalState(data.questionState);
+        }
+      });
+    }
+
+    function initBoard() {
+      const grid = document.getElementById('board-grid');
+      grid.innerHTML = '';
+      
+      for (let i = 1; i <= TOTAL_TILES; i++) {
+        const realm = getRealm(i);
+        const tile = document.createElement('div');
+        const isSpecial = SPECIAL_TILES.includes(i);
+        const isChallenge = CHALLENGE_TILES.includes(i);
+
+        let specialClass = isSpecial ? 'special-tile' : (isChallenge ? 'challenge-tile' : '');
+        tile.className = `tile realm-${realm.type} ${specialClass}`;
+        tile.id = `tile-${i}`;
+        
+        const pos = tilePositions[i - 1] || { left: 50, top: 50 };
+        tile.style.left = `${pos.left}%`;
+        tile.style.top = `${pos.top}%`;
+
+        tile.innerHTML = `<span class="tile-num">${i}</span><div class="tokens" id="tokens-${i}"></div>`;
+        grid.appendChild(tile);
+      }
+      renderTokens();
+    }
+
+    function renderTokens() {
+      for (let i = 1; i <= TOTAL_TILES; i++) {
+        const container = document.getElementById(`tokens-${i}`);
         if (container) container.innerHTML = '';
       }
-
-      // Render P1 Pawn
-      const p1Container = document.getElementById(`pawns-${gameState.p1.pos}`);
-      if (p1Container) {
-        const pawn1 = document.createElement('div');
-        pawn1.className = 'pawn pawn-p1';
-        p1Container.appendChild(pawn1);
-      }
-
-      // Render P2 Pawn
-      const p2Container = document.getElementById(`pawns-${gameState.p2.pos}`);
-      if (p2Container) {
-        const pawn2 = document.createElement('div');
-        pawn2.className = 'pawn pawn-p2';
-        p2Container.appendChild(pawn2);
-      }
-    }
-
-    // ------------------------------------------
-    // 4. FIREBASE ROOM & REALTIME SYNC
-    // ------------------------------------------
-    function joinRoom(role) {
-      const name = document.getElementById('player-name').value.trim() || role;
-      const roomCode = document.getElementById('room-code-input').value.trim().toUpperCase() || 'DEFAULT';
-
-      localRole = role;
-      currentRoomCode = roomCode;
-      roomRef = database.ref('rooms/' + roomCode);
-
-      document.getElementById('room-code-display').innerText = roomCode;
-      document.getElementById('lobby-modal').classList.add('hidden');
-
-      // Sync player info
-      if (role === 'P1') {
-        gameState.p1.name = name;
-      } else if (role === 'P2') {
-        gameState.p2.name = name;
-      }
-
-      // Initialize or Update Room on Firebase
-      roomRef.transaction((currentData) => {
-        if (currentData === null) {
-          return {
-            gameState: gameState,
-            p1Present: role === 'P1',
-            p2Present: role === 'P2'
-          };
-        } else {
-          if (role === 'P1') currentData.gameState.p1.name = name;
-          if (role === 'P2') currentData.gameState.p2.name = name;
-          return currentData;
-        }
-      });
-
-      // Listen for Realtime Game Updates
-      roomRef.child('gameState').on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          gameState = data;
-          updateUI();
+      players.forEach(p => {
+        const container = document.getElementById(`tokens-${p.pos}`);
+        if (container) {
+          container.innerHTML += `<div class="token-badge" title="${p.name} (${p.robotName})"><img src="${p.image}"></div>`;
         }
       });
     }
 
-    function updateUI() {
-      document.getElementById('p1-name-display').innerText = gameState.p1.name;
-      document.getElementById('p1-crystals').innerText = gameState.p1.crystals;
-      document.getElementById('p2-name-display').innerText = gameState.p2.name;
-      document.getElementById('p2-crystals').innerText = gameState.p2.crystals;
+    function updateHUD() {
+      document.getElementById('p1-card-icon').innerHTML = `<img src="${players[0].image}">`;
+      document.getElementById('p1-card-name').innerText = players[0].name;
+      document.getElementById('p1-card-title').innerText = `${players[0].robotName} (${players[0].title})`;
+      document.getElementById('p1-crystal').innerText = players[0].crystals;
 
-      // Active Turn Styling
-      document.getElementById('p1-card').classList.toggle('active', gameState.currentTurn === 'P1');
-      document.getElementById('p2-card').classList.toggle('active', gameState.currentTurn === 'P2');
+      document.getElementById('p2-card-icon').innerHTML = `<img src="${players[1].image}">`;
+      document.getElementById('p2-card-name').innerText = players[1].name;
+      document.getElementById('p2-card-title').innerText = `${players[1].robotName} (${players[1].title})`;
+      document.getElementById('p2-crystal').innerText = players[1].crystals;
 
-      const isMyTurn = localRole === gameState.currentTurn;
-      document.getElementById('turn-indicator').innerText = isMyTurn ? "ตาของคุณแล้ว!" : `ตาของ ${gameState[gameState.currentTurn.toLowerCase()].name}`;
-      document.getElementById('roll-btn').disabled = !isMyTurn;
+      renderInventoryUI(0);
+      renderInventoryUI(1);
 
-      renderPawns();
-      rotateDiceUI(gameState.lastDiceRoll);
-    }
-
-    // ------------------------------------------
-    // 5. 3D DICE & MOVEMENT LOGIC
-    // ------------------------------------------
-    function rollDice() {
-      if (localRole !== gameState.currentTurn) return;
-
-      document.getElementById('roll-btn').disabled = true;
-      const diceValue = Math.floor(Math.random() * 6) + 1;
+      document.getElementById('p1-card').classList.toggle('active', currentTurn === 0);
+      document.getElementById('p2-card').classList.toggle('active', currentTurn === 1);
       
-      const pKey = localRole.toLowerCase();
-      let newPos = gameState[pKey].pos + diceValue;
-      if (newPos > 42) newPos = 42; // Max board tile
+      const p = players[currentTurn];
+      document.getElementById('turn-display').innerHTML = `ตาของ: <img src="${p.image}" style="width:24px; height:24px; object-fit:contain;"> ${p.name} (${p.robotName})`;
+      
+      const isMyTurn = (myPlayerIndex === currentTurn);
+      document.getElementById('btn-roll').disabled = !isMyTurn;
+      document.getElementById('btn-open-shop').disabled = !isMyTurn;
 
-      gameState[pKey].pos = newPos;
-      gameState.lastDiceRoll = diceValue;
+      const roleBadge = document.getElementById('my-role-badge');
+      if (myPlayerRole === 'SPECTATOR') roleBadge.innerText = '👁️ สังเกตการณ์';
+      else roleBadge.innerText = isMyTurn ? '⚡ ถึงตาของคุณเล่น!' : '⏳ รอคู่แข่งเดิน...';
+    }
 
-      // Save to Firebase
-      roomRef.child('gameState').set(gameState).then(() => {
-        setTimeout(() => {
-          triggerTileEvent(newPos);
-        }, 1200);
+    function renderInventoryUI(playerIndex) {
+      const p = players[playerIndex];
+      const invContainer = document.getElementById(`p${playerIndex + 1}-inventory`);
+      if (!invContainer) return;
+
+      const isCurrentTurn = (playerIndex === currentTurn && playerIndex === myPlayerIndex);
+
+      invContainer.innerHTML = `
+        <button class="inv-item-btn" onclick="useItem('shield', ${playerIndex})" ${!isCurrentTurn || p.inventory.shield <= 0 ? 'disabled' : ''} title="เกราะกันคำตอบผิด">
+          🛡️ ${p.inventory.shield}
+        </button>
+        <button class="inv-item-btn ${p.activeBuffs && p.activeBuffs.timeExtender ? 'active-buff' : ''}" onclick="useItem('timeExtender', ${playerIndex})" ${!isCurrentTurn || p.inventory.timeExtender <= 0 ? 'disabled' : ''} title="ยืดเวลา +5 วินาที">
+          ⏱️ ${p.inventory.timeExtender}
+        </button>
+        <button class="inv-item-btn ${p.activeBuffs && p.activeBuffs.doubleCrystal ? 'active-buff' : ''}" onclick="useItem('doubleCrystal', ${playerIndex})" ${!isCurrentTurn || p.inventory.doubleCrystal <= 0 ? 'disabled' : ''} title="บูสต์คริสตัล x2">
+          ✨ ${p.inventory.doubleCrystal}
+        </button>
+        <button class="inv-item-btn" onclick="useItem('warpBoost', ${playerIndex})" ${!isCurrentTurn || p.inventory.warpBoost <= 0 ? 'disabled' : ''} title="วาร์ป +3 ช่อง">
+          🚀 ${p.inventory.warpBoost}
+        </button>
+      `;
+    }
+
+    // 🎲 DICE LOGIC WITH FIREBASE SYNC
+    function rollDice() {
+      if (myPlayerIndex !== currentTurn) return;
+
+      const outcome = Math.floor(Math.random() * 6) + 1;
+      const targetFaceAngles = {
+        1: { x: 0, y: 0 }, 2: { x: -90, y: 0 }, 3: { x: 0, y: -90 },
+        4: { x: 0, y: 90 }, 5: { x: 90, y: 0 }, 6: { x: 180, y: 0 }
+      };
+
+      const target = targetFaceAngles[outcome];
+      const extraSpinsX = (Math.floor(Math.random() * 3) + 4) * 360;
+      const extraSpinsY = (Math.floor(Math.random() * 3) + 4) * 360;
+
+      currentRotX += extraSpinsX + (target.x - (currentRotX % 360));
+      currentRotY += extraSpinsY + (target.y - (currentRotY % 360));
+
+      roomRef.child('dice').set({
+        outcome: outcome,
+        rotX: currentRotX,
+        rotY: currentRotY,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
       });
     }
 
-    function rotateDiceUI(value) {
-      const cube = document.getElementById('dice-cube');
-      const rotations = {
-        1: 'rotateY(0deg)',
-        2: 'rotateY(-90deg)',
-        3: 'rotateY(-180deg)',
-        4: 'rotateY(90deg)',
-        5: 'rotateX(-90deg)',
-        6: 'rotateX(90deg)'
-      };
-      cube.style.transform = rotations[value] || 'rotateY(0deg)';
+    function animateDiceRoll(rotX, rotY, outcome) {
+      const btn = document.getElementById('btn-roll');
+      const cube = document.getElementById('cube');
+      const shadow = document.getElementById('dice-shadow');
+
+      btn.disabled = true;
+      btn.innerText = '🎲 กำลังกลิ้ง...';
+
+      shadow.classList.remove('rolling-shadow');
+      void shadow.offsetWidth;
+      shadow.classList.add('rolling-shadow');
+
+      cube.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+
+      setTimeout(() => {
+        btn.innerText = '🎲 ทอยลูกเต๋า';
+        btn.disabled = (myPlayerIndex !== currentTurn);
+
+        if (myPlayerIndex === currentTurn) {
+          const p = players[currentTurn];
+          p.pos = Math.min(p.pos + outcome, TOTAL_TILES);
+          roomRef.child(`players/${currentTurn}/pos`).set(p.pos);
+
+          setTimeout(() => popQuestion(p.pos), 500);
+        }
+      }, 2200);
     }
 
-    // ------------------------------------------
-    // 6. QUESTION ENGINE & EVENT HANDLER
-    // ------------------------------------------
-    function triggerTileEvent(pos) {
-      const pKey = localRole.toLowerCase();
-      let realm = 'ADDITION';
-      let symbol = '+';
+    // 🛒 SHOP LOGIC WITH FIREBASE SYNC
+    function openShopModal(fromMainMenu = false) {
+      const p = players[currentTurn];
+      document.getElementById('shop-player-name').innerText = p.name;
+      document.getElementById('shop-player-crystals').innerText = p.crystals;
 
-      if (pos >= 13 && pos <= 22) { realm = 'SUBTRACTION'; symbol = '-'; }
-      else if (pos >= 23 && pos <= 34) { realm = 'MULTIPLICATION'; symbol = '×'; }
-      else if (pos >= 35) { realm = 'DIVISION'; symbol = '÷'; }
+      const grid = document.getElementById('shop-items-grid');
+      grid.innerHTML = SHOP_ITEMS.map(item => {
+        const canAfford = p.crystals >= item.price && (myPlayerIndex === currentTurn);
+        return `
+          <div class="shop-item-card">
+            <div class="shop-item-info">
+              <strong>${item.name}</strong>
+              <p>${item.desc}</p>
+            </div>
+            <div class="shop-item-buy">
+              <span class="shop-price">${item.price} 💎</span>
+              <button class="btn-buy" onclick="buyShopItem('${item.id}')" ${!canAfford ? 'disabled' : ''}>
+                ${canAfford ? 'แลกซื้อ' : 'คริสตัลไม่พอ'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
 
-      // Generate Random Integers
-      let num1 = Math.floor(Math.random() * 20) + 1;
-      let num2 = Math.floor(Math.random() * 20) + 1;
-      let ans = 0;
-
-      if (symbol === '+') ans = num1 + num2;
-      if (symbol === '-') { if(num1 < num2) [num1, num2] = [num2, num1]; ans = num1 - num2; }
-      if (symbol === '×') { num1 = Math.floor(Math.random()*10)+1; num2 = Math.floor(Math.random()*10)+1; ans = num1 * num2; }
-      if (symbol === '÷') { num2 = Math.floor(Math.random()*9)+1; ans = Math.floor(Math.random()*10)+1; num1 = num2 * ans; }
-
-      currentQuestionObj = { num1, num2, symbol, ans };
-
-      document.getElementById('realm-title').innerText = `อาณาจักร: ${realm}`;
-      document.getElementById('question-text').innerText = `${num1} ${symbol} ${num2} = ?`;
-      document.getElementById('answer-input').value = '';
-      document.getElementById('question-modal').classList.remove('hidden');
-
-      // Start Countdown Timer
-      startTimer(gameState[pKey].extraTime ? 20 : 15);
-      gameState[pKey].extraTime = false; // Reset extra time buff
+      document.getElementById('shop-modal').classList.remove('hidden');
     }
 
-    function startTimer(seconds) {
+    function closeShopModal() {
+      document.getElementById('shop-modal').classList.add('hidden');
+    }
+
+    function buyShopItem(itemId) {
+      if (myPlayerIndex !== currentTurn) return;
+      const p = players[currentTurn];
+      const item = SHOP_ITEMS.find(i => i.id === itemId);
+      
+      if (p.crystals >= item.price) {
+        p.crystals -= item.price;
+        p.inventory[itemId] = (p.inventory[itemId] || 0) + 1;
+        
+        roomRef.child(`players/${currentTurn}`).set(p);
+        openShopModal();
+      }
+    }
+
+    function useItem(itemId, playerIndex) {
+      if (playerIndex !== currentTurn || myPlayerIndex !== currentTurn) return;
+      const p = players[playerIndex];
+
+      if (p.inventory[itemId] > 0) {
+        if (itemId === 'warpBoost') {
+          p.inventory.warpBoost--;
+          p.pos = Math.min(p.pos + 3, TOTAL_TILES);
+          roomRef.child(`players/${currentTurn}`).set(p);
+          alert(`🚀 ${p.name} ใช้เทอร์โบบูสต์! เดินหน้าเพิ่ม 3 ช่องทันที`);
+          setTimeout(() => popQuestion(p.pos), 500);
+        } else if (itemId === 'timeExtender') {
+          if (!p.activeBuffs.timeExtender) {
+            p.inventory.timeExtender--;
+            p.activeBuffs.timeExtender = true;
+            roomRef.child(`players/${currentTurn}`).set(p);
+            alert(`⏱️ เปิดใช้งานยืดเวลา! ข้อถัดไปจะเพิ่มเวลาตอบอีก 5 วินาที`);
+          }
+        } else if (itemId === 'doubleCrystal') {
+          if (!p.activeBuffs.doubleCrystal) {
+            p.inventory.doubleCrystal--;
+            p.activeBuffs.doubleCrystal = true;
+            roomRef.child(`players/${currentTurn}`).set(p);
+            alert(`✨ เปิดใช้งานคูณคริสตัล x2 ในการตอบถูกครั้งต่อไป!`);
+          }
+        } else if (itemId === 'shield') {
+          alert(`🛡️ เกราะกันตอบผิดเป็นบัฟอัตโนมัติ จะทำงานเมื่อคุณตอบผิด! (คุณมีเกราะ ${p.inventory.shield} ชิ้น)`);
+        }
+      }
+    }
+
+    // ⚔️ QUESTION LOGIC WITH REALTIME SYNC
+    function generateQuestion(tileNum, difficulty = 'normal') {
+      const realm = getRealm(tileNum);
+      let a, b, q, ans;
+
+      if (realm.type === 'add') {
+        let max = difficulty === 'easy' ? 10 : (difficulty === 'hard' ? 35 : (difficulty === 'duel' ? 60 : 20));
+        a = Math.floor(Math.random() * max) + 1; b = Math.floor(Math.random() * max) + 1;
+        q = `${a} + ${b}`; ans = a + b;
+      } else if (realm.type === 'sub') {
+        let max = difficulty === 'easy' ? 15 : (difficulty === 'hard' ? 40 : (difficulty === 'duel' ? 70 : 20));
+        a = Math.floor(Math.random() * max) + 10; b = Math.floor(Math.random() * (a - 1)) + 1;
+        q = `${a} - ${b}`; ans = a - b;
+      } else if (realm.type === 'mul') {
+        let maxA = difficulty === 'easy' ? 5 : (difficulty === 'hard' ? 12 : (difficulty === 'duel' ? 18 : 9));
+        let maxB = difficulty === 'easy' ? 5 : (difficulty === 'hard' ? 12 : (difficulty === 'duel' ? 18 : 9));
+        a = Math.floor(Math.random() * maxA) + 2; b = Math.floor(Math.random() * maxB) + 2;
+        q = `${a} × ${b}`; ans = a * b;
+      } else { 
+        let maxAns = difficulty === 'easy' ? 6 : (difficulty === 'hard' ? 15 : (difficulty === 'duel' ? 25 : 10));
+        let maxB = difficulty === 'easy' ? 5 : (difficulty === 'hard' ? 12 : (difficulty === 'duel' ? 15 : 8));
+        b = Math.floor(Math.random() * maxB) + 2; ans = Math.floor(Math.random() * maxAns) + 1;
+        a = b * ans; q = `${a} ÷ ${b}`;
+      }
+      return { realmName: realm.name, realmIcon: realm.icon, question: q, answer: ans };
+    }
+
+    function popQuestion(tileNum) {
+      if (myPlayerIndex !== currentTurn) return;
+
+      const isChallenge = CHALLENGE_TILES.includes(tileNum);
+      const isSpecial = SPECIAL_TILES.includes(tileNum);
+
+      if (isChallenge) {
+        roomRef.child('questionState').set({
+          active: true,
+          mode: 'choice',
+          tileNum: tileNum
+        });
+      } else {
+        currentMultiplier = isSpecial ? 2.5 : 1; 
+        startQuestionView(tileNum, isSpecial ? '✨ ช่องโบนัสพิเศษ (Crystal x2.5!)' : null, 'normal');
+      }
+    }
+
+    function selectChallenge(difficulty) {
+      if (myPlayerIndex !== currentTurn) return;
+
+      if (difficulty === 'easy') currentMultiplier = 1;
+      else if (difficulty === 'hard') currentMultiplier = 2;
+      else if (difficulty === 'duel') currentMultiplier = 3;
+
+      const diffLabel = difficulty === 'easy' ? '🟢 แบบง่าย (x1)' : (difficulty === 'hard' ? '🟡 แบบยาก (x2)' : '🔥 ท้าดวล (x3)');
+      startQuestionView(players[currentTurn].pos, `🎯 โหมด: ${diffLabel}`, difficulty);
+    }
+
+    function startQuestionView(tileNum, badgeText, difficulty) {
+      const qData = generateQuestion(tileNum, difficulty);
+      const p = players[currentTurn];
+
+      let initialTime = QUESTION_TIME_LIMIT;
+      if (p.activeBuffs && p.activeBuffs.timeExtender) {
+        initialTime += 5;
+        p.activeBuffs.timeExtender = false;
+        roomRef.child(`players/${currentTurn}`).set(p);
+      }
+
+      roomRef.child('questionState').set({
+        active: true,
+        mode: 'question',
+        questionData: qData,
+        badgeText: badgeText || '',
+        multiplier: currentMultiplier,
+        timeRemaining: initialTime
+      });
+    }
+
+    function syncQuestionModalState(qState) {
+      if (!qState || !qState.active) {
+        document.getElementById('question-modal').classList.add('hidden');
+        clearInterval(timerInterval);
+        return;
+      }
+
+      const modal = document.getElementById('question-modal');
+      const choiceView = document.getElementById('modal-choice-view');
+      const questionView = document.getElementById('modal-question-view');
+      const resultView = document.getElementById('modal-result-view');
+      const isMyTurn = (myPlayerIndex === currentTurn);
+
+      modal.classList.remove('hidden');
+
+      if (qState.mode === 'choice') {
+        choiceView.classList.remove('hidden');
+        questionView.classList.add('hidden');
+        resultView.classList.add('hidden');
+
+        document.getElementById('btn-choice-easy').disabled = !isMyTurn;
+        document.getElementById('btn-choice-hard').disabled = !isMyTurn;
+        document.getElementById('btn-choice-duel').disabled = !isMyTurn;
+
+      } else if (qState.mode === 'question') {
+        choiceView.classList.add('hidden');
+        questionView.classList.remove('hidden');
+        resultView.classList.add('hidden');
+
+        currentQuestion = qState.questionData;
+        currentMultiplier = qState.multiplier;
+
+        document.getElementById('modal-realm-tag').innerText = `${currentQuestion.realmIcon} ${currentQuestion.realmName}`;
+        const bonusBadge = document.getElementById('modal-bonus-badge');
+        if (qState.badgeText) {
+          bonusBadge.innerText = qState.badgeText;
+          bonusBadge.classList.remove('hidden');
+        } else {
+          bonusBadge.classList.add('hidden');
+        }
+
+        document.getElementById('q-text').innerText = `${currentQuestion.question} = ?`;
+        document.getElementById('q-answer').disabled = !isMyTurn;
+        document.getElementById('btn-submit-ans').disabled = !isMyTurn;
+
+        if (isMyTurn) setTimeout(() => document.getElementById('q-answer').focus(), 150);
+
+        timeRemaining = qState.timeRemaining;
+        startTimerLocal();
+
+      } else if (qState.mode === 'result') {
+        choiceView.classList.add('hidden');
+        questionView.classList.add('hidden');
+        resultView.classList.remove('hidden');
+        clearInterval(timerInterval);
+
+        const card = document.getElementById('modal-card');
+        const animBox = document.getElementById('result-animation-box');
+        const title = document.getElementById('result-title');
+        const reward = document.getElementById('result-reward');
+
+        document.getElementById('user-ans-display').innerText = qState.userAnsDisplay;
+        document.getElementById('correct-ans-display').innerText = qState.correctAnswer;
+
+        if (qState.isCorrect) {
+          card.className = 'modal-card correct-mode';
+          animBox.innerHTML = FIREWORKS_SVG;
+          title.innerText = 'ถูกต้องแม่นยำ!';
+          reward.innerHTML = `+${qState.earnedCrystals} Crystal 💎`;
+          reward.style.display = 'inline-flex';
+        } else {
+          if (qState.shieldSaved) {
+            card.className = 'modal-card correct-mode';
+            animBox.innerHTML = FIREWORKS_SVG;
+            title.innerText = '🛡️ เกราะช่วยชีวิตไว้!';
+            reward.innerHTML = `ไม่เสียสิทธิ์ในรอบนี้!`;
+            reward.style.display = 'inline-flex';
+          } else {
+            card.className = 'modal-card incorrect-mode';
+            animBox.innerHTML = EXPLOSION_SVG;
+            title.innerText = qState.isTimeout ? '⏰ หมดเวลาการตอบ!' : 'คำตอบไม่ถูกต้อง!';
+            reward.style.display = 'none';
+          }
+        }
+
+        document.getElementById('btn-next-turn').disabled = !isMyTurn;
+      }
+    }
+
+    function startTimerLocal() {
       clearInterval(timerInterval);
-      const timerBar = document.getElementById('timer-bar');
-      let timeLeft = seconds;
-      timerBar.style.width = '100%';
+      updateTimerUI();
 
       timerInterval = setInterval(() => {
-        timeLeft--;
-        timerBar.style.width = `${(timeLeft / seconds) * 100}%`;
+        timeRemaining--;
+        updateTimerUI();
 
-        if (timeLeft <= 0) {
+        if (timeRemaining <= 0) {
           clearInterval(timerInterval);
-          submitAnswer(true); // Auto submit on timeout
+          if (myPlayerIndex === currentTurn) {
+            submitAnswer(true);
+          }
         }
       }, 1000);
     }
 
+    function updateTimerUI() {
+      const countEl = document.getElementById('timer-count');
+      const barEl = document.getElementById('timer-bar');
+      const timerBox = document.getElementById('timer-box');
+
+      if (countEl) countEl.innerText = timeRemaining;
+      if (barEl) {
+        const percentage = Math.max(0, (timeRemaining / QUESTION_TIME_LIMIT) * 100);
+        barEl.style.width = `${Math.min(100, percentage)}%`;
+      }
+
+      if (timeRemaining <= 2) timerBox.classList.add('urgent');
+      else timerBox.classList.remove('urgent');
+    }
+
     function submitAnswer(isTimeout = false) {
+      if (myPlayerIndex !== currentTurn) return;
       clearInterval(timerInterval);
-      const userAnswer = parseInt(document.getElementById('answer-input').value);
-      const pKey = localRole.toLowerCase();
-      const feedback = document.getElementById('feedback-overlay');
 
-      let isCorrect = !isTimeout && (userAnswer === currentQuestionObj.ans);
+      const inputEl = document.getElementById('q-answer');
+      if (!isTimeout && inputEl.value === '') return;
 
-      if (isCorrect) {
-        feedback.innerText = '✨ ถูกต้อง!';
-        feedback.classList.add('feedback-show');
-        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      const p = players[currentTurn];
+      let userAnsDisplay = '';
+      let isCorrect = false;
 
-        // Calculate Crystal Reward
-        let reward = 20;
-        if (gameState[pKey].doubleCrystal) {
-          reward *= 2;
-          gameState[pKey].doubleCrystal = false;
-        }
-        gameState[pKey].crystals += reward;
-
+      if (isTimeout) {
+        userAnsDisplay = 'หมดเวลา!';
+        isCorrect = false;
       } else {
-        if (gameState[pKey].shield) {
-          feedback.innerText = '🛡️ เกราะช่วยไว้!';
-          gameState[pKey].shield = false;
-        } else {
-          feedback.innerText = '💥 ตอบผิด!';
-          gameState[pKey].crystals = Math.max(0, gameState[pKey].crystals - 10);
+        const userAns = parseInt(inputEl.value);
+        userAnsDisplay = userAns;
+        isCorrect = (userAns === currentQuestion.answer);
+      }
+
+      let earnedCrystals = Math.round(BASE_CRYSTAL_REWARD * currentMultiplier);
+
+      if (p.activeBuffs && p.activeBuffs.doubleCrystal && isCorrect) {
+        earnedCrystals *= 2;
+        p.activeBuffs.doubleCrystal = false;
+      }
+
+      let shieldSaved = false;
+      if (isCorrect) {
+        p.crystals += earnedCrystals;
+        saveScoreToHOF(p.name, p.robotName, p.crystals);
+      } else {
+        if (p.inventory.shield > 0) {
+          p.inventory.shield--;
+          shieldSaved = true;
         }
-        feedback.classList.add('feedback-show');
       }
 
-      setTimeout(() => {
-        feedback.classList.remove('feedback-show');
-        document.getElementById('question-modal').classList.add('hidden');
-        
-        // Switch Turn
-        gameState.currentTurn = gameState.currentTurn === 'P1' ? 'P2' : 'P1';
-        roomRef.child('gameState').set(gameState);
-      }, 1500);
-    }
+      roomRef.child(`players/${currentTurn}`).set(p);
 
-    // ------------------------------------------
-    // 7. CRYSTAL SHOP SYSTEM
-    // ------------------------------------------
-    function openShop() {
-      document.getElementById('shop-modal').classList.remove('hidden');
-    }
-
-    function closeShop() {
-      document.getElementById('shop-modal').classList.add('hidden');
-    }
-
-    function buyItem(itemType, cost) {
-      const pKey = localRole.toLowerCase();
-      if (gameState[pKey].crystals < cost) {
-        alert('คริสตัลไม่เพียงพอ!');
-        return;
-      }
-
-      gameState[pKey].crystals -= cost;
-
-      if (itemType === 'shield') gameState[pKey].shield = true;
-      if (itemType === 'extraTime') gameState[pKey].extraTime = true;
-      if (itemType === 'doubleCrystal') gameState[pKey].doubleCrystal = true;
-      if (itemType === 'turbo') {
-        gameState[pKey].pos = Math.min(42, gameState[pKey].pos + 3);
-      }
-
-      roomRef.child('gameState').set(gameState).then(() => {
-        alert('ซื้อไอเทมสำเร็จ!');
-        closeShop();
+      roomRef.child('questionState').set({
+        active: true,
+        mode: 'result',
+        userAnsDisplay: userAnsDisplay,
+        correctAnswer: currentQuestion.answer,
+        isCorrect: isCorrect,
+        shieldSaved: shieldSaved,
+        isTimeout: isTimeout,
+        earnedCrystals: earnedCrystals
       });
     }
 
-    // Initialize UI on Load
-    window.onload = () => {
-      initBoardUI();
-    };
+    function nextTurnAfterResult() {
+      if (myPlayerIndex !== currentTurn) return;
+
+      const p = players[currentTurn];
+      if (p.pos >= TOTAL_TILES) {
+        alert(`🏆 ยินดีด้วย! ${p.name} (${p.robotName}) พิชิตปราสาท Zero Castle ได้สำเร็จ!`);
+        roomRef.child('status').set('ended');
+        showHOF();
+        return;
+      }
+
+      const nextTurn = (currentTurn + 1) % 2;
+      roomRef.update({
+        currentTurn: nextTurn,
+        'questionState/active': false
+      });
+    }
+
+    document.getElementById('q-answer').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') submitAnswer();
+    });
+
+    // 🏆 HALL OF FAME SYSTEM (FIREBASE + LOCALSTORAGE HYBRID)
+    function saveScoreToHOF(name, robotName, crystals) {
+      // 1. บันทึกลง LocalStorage
+      let data = JSON.parse(localStorage.getItem('math_robot_hof') || '[]');
+      const exist = data.find(d => d.name === name);
+      if (exist) { 
+        exist.crystals = Math.max(exist.crystals, crystals);
+        exist.robotName = robotName;
+      } else { 
+        data.push({ name, robotName, crystals }); 
+      }
+      data.sort((a,b) => b.crystals - a.crystals);
+      localStorage.setItem('math_robot_hof', JSON.stringify(data));
+
+      // 2. ซิงก์ขึ้น Firebase Database เพื่อแชร์คะแนนออนไลน์
+      if (db) {
+        const cleanNameKey = name.replace(/[.#$/[\]]/g, "_");
+        db.ref('hof/' + cleanNameKey).set({
+          name: name,
+          robotName: robotName,
+          crystals: crystals
+        });
+      }
+    }
+
+    function loadHOFData() {
+      if (db) {
+        db.ref('hof').once('value', snapshot => {
+          if (snapshot.exists()) {
+            let data = [];
+            snapshot.forEach(child => {
+              data.push(child.val());
+            });
+            data.sort((a, b) => b.crystals - a.crystals);
+            renderHOFUI(data);
+          } else {
+            loadHOFLocal();
+          }
+        }).catch(() => loadHOFLocal());
+      } else {
+        loadHOFLocal();
+      }
+    }
+
+    function loadHOFLocal() {
+      const data = JSON.parse(localStorage.getItem('math_robot_hof') || '[]');
+      renderHOFUI(data);
+    }
+
+    function renderHOFUI(data) {
+      document.getElementById('hof-name-1').innerText = data[0] ? `${data[0].name}` : '-';
+      document.getElementById('hof-score-1').innerText = `${data[0]?.crystals || 0} 💎`;
+      document.getElementById('hof-name-2').innerText = data[1] ? `${data[1].name}` : '-';
+      document.getElementById('hof-score-2').innerText = `${data[1]?.crystals || 0} 💎`;
+      document.getElementById('hof-name-3').innerText = data[2] ? `${data[2].name}` : '-';
+      document.getElementById('hof-score-3').innerText = `${data[2]?.crystals || 0} 💎`;
+
+      const list = document.getElementById('hof-list');
+      if (data.length === 0) {
+        list.innerHTML = '<tr><td colspan="4" style="color:#94a3b8;">ยังไม่มีข้อมูลการเล่น</td></tr>';
+      } else {
+        list.innerHTML = data.slice(3, 10).map((item, idx) => `
+          <tr>
+            <td>#${idx + 4}</td>
+            <td><strong>${item.name}</strong></td>
+            <td>🤖 ${item.robotName}</td>
+            <td>${item.crystals} 💎</td>
+          </tr>
+        `).join('');
+      }
+    }
   </script>
 </body>
 </html>
