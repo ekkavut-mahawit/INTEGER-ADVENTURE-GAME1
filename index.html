@@ -161,9 +161,6 @@
 
     .tile-num { position: absolute; top: 22px; font-weight: bold; color: #ffffff; font-size: 1rem; text-shadow: 0 1px 3px black, 0 0 5px rgba(0,0,0,0.8); pointer-events: none; }
 
-    /* ----------------------------------------------------------------- */
-    /* 🤖 ปรับปรุงการแสดงผลรูปหุ่นยนต์บนกระดานให้ใหญ่ขึ้น เรืองแสงสดใสเต็มตัว */
-    /* ----------------------------------------------------------------- */
     .tokens { 
       position: absolute; top: -35px; display: flex; gap: 2px; justify-content: center; align-items: center; z-index: 20; pointer-events: none; 
     }
@@ -704,6 +701,12 @@
 
   <script>
     // ----------------------------------------------------
+    // 🌐 GOOGLE SHEETS INTEGRATION CONFIGURATION
+    // ----------------------------------------------------
+    const GOOGLE_SHEETS_WEB_APP_URL = "YOUR_GOOGLE_SHEETS_WEB_APP_URL"; // วาง URL Web App ของคุณที่นี่
+    let hasLoggedThisGame = false;
+
+    // ----------------------------------------------------
     // 🎵 REAL-TIME WEB AUDIO API SOUND ENGINE
     // ----------------------------------------------------
     class SoundEngine {
@@ -1043,6 +1046,7 @@
       currentRoomCode = code;
       myRole = 0; // Host = P1
       isSpectatorMode = false;
+      hasLoggedThisGame = false; // รีเซ็ตการบันทึกข้อมูลเมื่อสร้างห้องใหม่
 
       const r1 = ROBOT_PRESETS[p1SelectedRobotIndex];
       const r2 = ROBOT_PRESETS[p2SelectedRobotIndex];
@@ -1085,6 +1089,7 @@
         
         const data = snap.val();
         currentRoomCode = code;
+        hasLoggedThisGame = false;
         closeRoomInputModal();
 
         if (isSpectatorMode) {
@@ -1733,6 +1738,44 @@
       });
     }
 
+    // 📊 ฟังก์ชันสำหรับส่งข้อมูลผู้เล่นทั้ง 2 คนเข้า Google Sheet
+    function saveGameDataToGoogleSheet(data) {
+      if (!GOOGLE_SHEETS_WEB_APP_URL || GOOGLE_SHEETS_WEB_APP_URL === "https://script.google.com/macros/s/AKfycbw0jo8bPRS_pK9YkX1DrkF45485qapubAh-rxFCUQyMaxGbI1KIW_oBKRTMaDQ9l7cM4Q/exec") {
+        console.warn("ยังไม่ได้ตั้งค่า GOOGLE_SHEETS_WEB_APP_URL");
+        return;
+      }
+
+      const p1 = data.players[0];
+      const p2 = data.players[1];
+      const winnerId = data.winnerId !== undefined ? data.winnerId : 0;
+      const winner = data.players[winnerId];
+
+      const payload = {
+        timestamp: new Date().toLocaleString('th-TH'),
+        roomCode: currentRoomCode || "-",
+        winnerName: winner ? winner.name : "-",
+        p1Name: p1 ? p1.name : "-",
+        p1Robot: p1 ? p1.robotName : "-",
+        p1Crystals: p1 ? p1.crystals : 0,
+        p1Pos: p1 ? p1.pos : 1,
+        p2Name: p2 ? p2.name : "-",
+        p2Robot: p2 ? p2.robotName : "-",
+        p2Crystals: p2 ? p2.crystals : 0,
+        p2Pos: p2 ? p2.pos : 1
+      };
+
+      fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(() => console.log('บันทึกข้อมูลเข้า Google Sheet สำเร็จ'))
+      .catch(err => console.error('เกิดข้อผิดพลาดในการบันทึก Google Sheet:', err));
+    }
+
     function showVictoryModal(data) {
       const winnerId = (data.winnerId !== undefined) ? data.winnerId : 0;
       const winner = data.players[winnerId];
@@ -1748,6 +1791,12 @@
         document.getElementById('winner-stats-display').innerText = `สะสม Crystal ทั้งหมด: ${winner.crystals} 💎`;
         
         saveScoreToHOF(winner.name, winner.robotName, winner.crystals);
+      }
+
+      // 📊 ส่งข้อมูลเข้า Google Sheet เฉพาะฝั่ง Host (P1) เพื่อป้องกันการส่งซ้ำสองครั้ง
+      if (myRole === 0 && !hasLoggedThisGame) {
+        hasLoggedThisGame = true;
+        saveGameDataToGoogleSheet(data);
       }
 
       document.getElementById('victory-modal').classList.remove('hidden');
@@ -1878,24 +1927,25 @@
     }
 
     function loadHOFData() {
-      const data = JSON.parse(localStorage.getItem('math_robot_hof') || '[]');
-      document.getElementById('hof-name-1').innerText = data[0] ? `${data[0].name}` : '-';
-      document.getElementById('hof-score-1').innerText = `${data[0]?.crystals || 0} 💎`;
-      document.getElementById('hof-name-2').innerText = data[1] ? `${data[1].name}` : '-';
-      document.getElementById('hof-score-2').innerText = `${data[1]?.crystals || 0} 💎`;
-      document.getElementById('hof-name-3').innerText = data[2] ? `${data[2].name}` : '-';
-      document.getElementById('hof-score-3').innerText = `${data[2]?.crystals || 0} 💎`;
+      let data = JSON.parse(localStorage.getItem('math_robot_hof') || '[]');
+      
+      document.getElementById('hof-name-1').innerText = data[0] ? data[0].name : '-';
+      document.getElementById('hof-score-1').innerText = data[0] ? `${data[0].crystals} 💎` : '0 💎';
+      
+      document.getElementById('hof-name-2').innerText = data[1] ? data[1].name : '-';
+      document.getElementById('hof-score-2').innerText = data[1] ? `${data[1].crystals} 💎` : '0 💎';
+      
+      document.getElementById('hof-name-3').innerText = data[2] ? data[2].name : '-';
+      document.getElementById('hof-score-3').innerText = data[2] ? `${data[2].crystals} 💎` : '0 💎';
 
       const list = document.getElementById('hof-list');
-      if (data.length === 0) {
-        list.innerHTML = '<tr><td colspan="4" style="color:#94a3b8;">ยังไม่มีข้อมูลการเล่น</td></tr>';
-      } else {
-        list.innerHTML = data.slice(3, 10).map((item, index) => `
+      if (list) {
+        list.innerHTML = data.map((d, i) => `
           <tr>
-            <td>${index + 4}</td>
-            <td>${item.name}</td>
-            <td>${item.robotName}</td>
-            <td>${item.crystals} 💎</td>
+            <td>${i + 1}</td>
+            <td>${d.name}</td>
+            <td>${d.robotName}</td>
+            <td>${d.crystals} 💎</td>
           </tr>
         `).join('');
       }
