@@ -646,9 +646,10 @@
           <h2 id="q-text" class="question-text">12 + 5 = ?</h2>
         </div>
 
-        <div class="input-wrapper">
-          <input type="number" id="q-answer" placeholder="ป้อนคำตอบที่นี่..." autofocus autocomplete="off">
-        </div>
+        <div class="input-wrapper" style="display: flex; gap: 8px;">
+  <button type="button" onclick="toggleNegativeSign()" style="padding: 0 16px; font-size: 1.5rem; font-weight: bold; background: #334155; color: var(--accent-gold); border: 2px solid #475569; border-radius: 12px;">±</button>
+  <input type="text" id="q-answer" inputmode="numeric" placeholder="ป้อนคำตอบที่นี่..." autofocus autocomplete="off" style="flex: 1;">
+</div>
 
         <button id="btn-submit-ans" onclick="triggerSubmitAnswer()" class="btn-submit">⚡ ยืนยันคำตอบ (Enter)</button>
       </div>
