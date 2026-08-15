@@ -458,7 +458,7 @@
         <span class="player-title-tag p1-tag">🎮 ผู้เล่นคนแรก (P1)</span>
         <div class="name-input-group">
           <label for="p1-name-input">ชื่อนักรบ P1:</label>
-          <input type="text" id="p1-name-input" class="name-input" value="นักรบสปาร์ก" onchange="updatePlayerLobbyInfo()">
+          <input type="text" id="p1-name-input" class="name-input" value="นักรบสปาร์ก" oninput="updatePlayerLobbyInfo()">
         </div>
         <label style="font-size:0.85rem; color:#94a3b8;">เลือกยูนิตหุ่นยนต์:</label>
         <div class="robot-grid" id="p1-robot-grid"></div>
@@ -468,7 +468,7 @@
         <span class="player-title-tag p2-tag">🎮 ผู้เล่นคนที่สอง (P2)</span>
         <div class="name-input-group">
           <label for="p2-name-input">ชื่อนักรบ P2:</label>
-          <input type="text" id="p2-name-input" class="name-input" value="จักรกลไซบอร์ก" onchange="updatePlayerLobbyInfo()">
+          <input type="text" id="p2-name-input" class="name-input" value="จักรกลไซบอร์ก" oninput="updatePlayerLobbyInfo()">
         </div>
         <label style="font-size:0.85rem; color:#94a3b8;">เลือกยูนิตหุ่นยนต์:</label>
         <div class="robot-grid" id="p2-robot-grid"></div>
@@ -648,7 +648,7 @@
 
         <div class="input-wrapper" style="display: flex; gap: 8px;">
           <button type="button" onclick="toggleNegativeSign()" style="padding: 0 16px; font-size: 1.5rem; font-weight: bold; background: #334155; color: var(--accent-gold); border: 2px solid #475569; border-radius: 12px;">±</button>
-          <input type="text" id="q-answer" inputmode="numeric" placeholder="ป้อนคำตอบที่นี่..." autofocus autocomplete="off" style="flex: 1;">
+          <input type="text" id="q-answer" inputmode="text" placeholder="ป้อนคำตอบที่นี่..." autofocus autocomplete="off" style="flex: 1;">
         </div>
 
         <button id="btn-submit-ans" onclick="triggerSubmitAnswer()" class="btn-submit">⚡ ยืนยันคำตอบ (Enter)</button>
@@ -1143,10 +1143,11 @@
         document.getElementById('p2-name-input').disabled = (myRole !== 1);
         document.getElementById('btn-start-game').style.display = (myRole === 0) ? 'block' : 'none';
 
-        if (roomData.players[0]) {
+        // ปรับปรุงป้องกันการเขียนชื่อทับขณะพิมพ์
+        if (roomData.players[0] && document.activeElement !== document.getElementById('p1-name-input')) {
           document.getElementById('p1-name-input').value = roomData.players[0].name;
         }
-        if (roomData.players[1]) {
+        if (roomData.players[1] && document.activeElement !== document.getElementById('p2-name-input')) {
           document.getElementById('p2-name-input').value = roomData.players[1].name;
         }
 
@@ -1215,6 +1216,7 @@
 
     function confirmStartGame() {
       if (myRole !== 0) return; 
+      updatePlayerLobbyInfo();
       db.ref(`rooms/${currentRoomCode}`).update({ status: 'playing' });
     }
 
@@ -1660,6 +1662,19 @@
       else timerBox.classList.remove('urgent');
     }
 
+    // ฟังก์ชันเปิด/ปิดเครื่องหมายลบหน้าคำตอบ
+    function toggleNegativeSign() {
+      const input = document.getElementById('q-answer');
+      if (!input) return;
+      let val = input.value;
+      if (val.startsWith('-')) {
+        input.value = val.substring(1);
+      } else {
+        input.value = '-' + val;
+      }
+      input.focus();
+    }
+
     function triggerSubmitAnswer(isTimeout = false) {
       if (myRole !== roomData.currentTurn) return;
 
@@ -1741,7 +1756,7 @@
 
     // 📊 ฟังก์ชันสำหรับส่งข้อมูลผู้เล่นทั้ง 2 คนเข้า Google Sheet
     function saveGameDataToGoogleSheet(data) {
-      if (!GOOGLE_SHEETS_WEB_APP_URL || GOOGLE_SHEETS_WEB_APP_URL === "https://script.google.com/macros/s/AKfycbw0jo8bPRS_pK9YkX1DrkF45485qapubAh-rxFCUQyMaxGbI1KIW_oBKRTMaDQ9l7cM4Q/exec") {
+      if (!GOOGLE_SHEETS_WEB_APP_URL || GOOGLE_SHEETS_WEB_APP_URL === "YOUR_GOOGLE_SHEETS_WEB_APP_URL") {
         console.warn("ยังไม่ได้ตั้งค่า GOOGLE_SHEETS_WEB_APP_URL");
         return;
       }
@@ -1848,100 +1863,84 @@
     }
 
     function buyShopItem(itemId) {
-      if (isSpectatorMode || typeof myRole !== 'number') return;
-
-      const p = roomData.players[myRole];
+      const targetRole = (typeof myRole === 'number') ? myRole : 0;
+      if (!roomData || !roomData.players || !roomData.players[targetRole]) return;
+      const p = roomData.players[targetRole];
       const item = SHOP_ITEMS.find(i => i.id === itemId);
-      
-      if (p.crystals >= item.price) {
-        p.crystals -= item.price;
-        p.inventory[itemId] = (p.inventory[itemId] || 0) + 1;
-        
-        soundEngine.playShopBuy();
+      if (!item || p.crystals < item.price) return;
 
-        db.ref(`rooms/${currentRoomCode}/players/${myRole}`).set(p).then(() => {
-          openShopModal(isFromMainMenuShop);
-        });
-      }
+      p.crystals -= item.price;
+      if (!p.inventory) p.inventory = { shield: 0, timeExtender: 0, doubleCrystal: 0, warpBoost: 0 };
+      p.inventory[itemId] = (p.inventory[itemId] || 0) + 1;
+
+      soundEngine.playShopBuy();
+
+      db.ref(`rooms/${currentRoomCode}/players/${targetRole}`).update(p).then(() => {
+        openShopModal(isFromMainMenuShop);
+      });
     }
 
-    // ----------------------------------------------------
-    // 📌 FIX 1: ฟังก์ชันสลับเครื่องหมายบวก/ลบ (±)
-    // ----------------------------------------------------
-    function toggleNegativeSign() {
-      const input = document.getElementById('q-answer');
-      if (!input) return;
-      let val = input.value;
-      if (val.startsWith('-')) {
-        input.value = val.substring(1);
-      } else {
-        input.value = '-' + val;
-      }
-    }
-
-    // ----------------------------------------------------
-    // 📌 FIX 2: การใช้ไอเทม (useItem) และระบบ Hall of Fame
-    // ----------------------------------------------------
     function useItem(itemId, playerIndex) {
-      if (playerIndex !== myRole || playerIndex !== roomData.currentTurn) return;
+      if (myRole !== playerIndex || myRole !== roomData.currentTurn) return;
       const p = roomData.players[playerIndex];
+      if (!p.inventory || p.inventory[itemId] <= 0) return;
 
-      if (p.inventory[itemId] > 0) {
-        if (itemId === 'warpBoost') {
-          p.inventory.warpBoost--;
-          p.pos = Math.min(p.pos + 3, TOTAL_TILES);
-          soundEngine.playWarp();
-          
-          const oldRealm = p.lastRealm || null;
-          const newRealmObj = getRealm(p.pos);
-          p.lastRealm = newRealmObj.type;
-
-          db.ref(`rooms/${currentRoomCode}/players/${playerIndex}`).set(p).then(() => {
-            alert(`🚀 ใช้ไอเทม Warp Boost! เดินหน้าเพิ่ม 3 ช่อง ไปยังช่อง ${p.pos}`);
-            if (oldRealm !== newRealmObj.type) {
-              db.ref(`rooms/${currentRoomCode}`).update({
-                phase: 'realm_announce',
-                pendingTileNum: p.pos,
-                realmInfo: newRealmObj
-              });
-            } else {
-              popQuestion(p.pos);
-            }
-          });
-        } else if (itemId === 'timeExtender') {
-          p.inventory.timeExtender--;
-          p.activeBuffs.timeExtender = true;
-          db.ref(`rooms/${currentRoomCode}/players/${playerIndex}`).set(p);
-        } else if (itemId === 'doubleCrystal') {
-          p.inventory.doubleCrystal--;
-          p.activeBuffs.doubleCrystal = true;
-          db.ref(`rooms/${currentRoomCode}/players/${playerIndex}`).set(p);
-        }
+      if (itemId === 'warpBoost') {
+        if (roomData.phase !== 'idle') return alert('ใช้งานได้เฉพาะก่อนทอยเต๋าเท่านั้น');
+        p.inventory[itemId]--;
+        const newPos = Math.min(p.pos + 3, TOTAL_TILES);
+        p.pos = newPos;
+        soundEngine.playWarp();
+        db.ref(`rooms/${currentRoomCode}/players/${playerIndex}`).update(p);
+      } else if (itemId === 'timeExtender') {
+        if (p.activeBuffs && p.activeBuffs.timeExtender) return;
+        p.inventory[itemId]--;
+        if (!p.activeBuffs) p.activeBuffs = {};
+        p.activeBuffs.timeExtender = true;
+        soundEngine.playShopBuy();
+        db.ref(`rooms/${currentRoomCode}/players/${playerIndex}`).update(p);
+      } else if (itemId === 'doubleCrystal') {
+        if (p.activeBuffs && p.activeBuffs.doubleCrystal) return;
+        p.inventory[itemId]--;
+        if (!p.activeBuffs) p.activeBuffs = {};
+        p.activeBuffs.doubleCrystal = true;
+        soundEngine.playShopBuy();
+        db.ref(`rooms/${currentRoomCode}/players/${playerIndex}`).update(p);
       }
     }
 
-    function saveScoreToHOF(name, robotName, crystals) {
-      db.ref('hof').push({
+    function saveScoreToHOF(name, robot, score) {
+      if (!name || score <= 0) return;
+      const hofRef = db.ref('hallOfFame');
+      hofRef.push({
         name: name,
-        robotName: robotName,
-        crystals: crystals,
+        robot: robot,
+        score: score,
         timestamp: Date.now()
       });
     }
 
     function loadHOFData() {
-      db.ref('hof').orderByChild('crystals').limitToLast(10).once('value', snap => {
+      db.ref('hallOfFame').orderByChild('score').limitToLast(10).once('value').then(snap => {
         const list = [];
         snap.forEach(child => {
           list.push(child.val());
         });
-        list.reverse();
-        
-        for (let i = 0; i < 3; i++) {
-          const item = list[i] || { name: '-', crystals: 0 };
-          document.getElementById(`hof-name-${i+1}`).innerText = item.name;
-          document.getElementById(`hof-score-${i+1}`).innerText = `${item.crystals} 💎`;
-        }
+        list.sort((a, b) => b.score - a.score);
+
+        const r1Name = document.getElementById('hof-name-1');
+        const r1Score = document.getElementById('hof-score-1');
+        const r2Name = document.getElementById('hof-name-2');
+        const r2Score = document.getElementById('hof-score-2');
+        const r3Name = document.getElementById('hof-name-3');
+        const r3Score = document.getElementById('hof-score-3');
+
+        if (r1Name) r1Name.innerText = list[0] ? list[0].name : '-';
+        if (r1Score) r1Score.innerText = list[0] ? `${list[0].score} 💎` : '0 💎';
+        if (r2Name) r2Name.innerText = list[1] ? list[1].name : '-';
+        if (r2Score) r2Score.innerText = list[1] ? `${list[1].score} 💎` : '0 💎';
+        if (r3Name) r3Name.innerText = list[2] ? list[2].name : '-';
+        if (r3Score) r3Score.innerText = list[2] ? `${list[2].score} 💎` : '0 💎';
 
         const tbody = document.getElementById('hof-list');
         if (tbody) {
@@ -1949,8 +1948,8 @@
             <tr>
               <td>${idx + 1}</td>
               <td>${item.name}</td>
-              <td>${item.robotName || '-'}</td>
-              <td>${item.crystals} 💎</td>
+              <td>${item.robot || '-'}</td>
+              <td style="color:var(--accent-gold); font-weight:bold;">${item.score} 💎</td>
             </tr>
           `).join('');
         }
