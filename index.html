@@ -703,7 +703,7 @@
     // ----------------------------------------------------
     // 🌐 GOOGLE SHEETS INTEGRATION CONFIGURATION
     // ----------------------------------------------------
-    const GOOGLE_SHEETS_WEB_APP_URL = "YOUR_GOOGLE_SHEETS_WEB_APP_URL"; // วาง URL Web App ของคุณที่นี่
+    const GOOGLE_SHEETS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw0jo8bPRS_pK9YkX1DrkF45485qapubAh-rxFCUQyMaxGbI1KIW_oBKRTMaDQ9l7cM4Q/exec"; // วาง URL Web App ของคุณที่นี่
     let hasLoggedThisGame = false;
 
     // ----------------------------------------------------
@@ -1718,7 +1718,7 @@
     // 6. END GAME & GOOGLE SHEETS INTEGRATION
     // ----------------------------------------------------
     function saveGameDataToGoogleSheet(data) {
-      if (!GOOGLE_SHEETS_WEB_APP_URL || GOOGLE_SHEETS_WEB_APP_URL === "YOUR_GOOGLE_SHEETS_WEB_APP_URL") {
+      if (!GOOGLE_SHEETS_WEB_APP_URL || GOOGLE_SHEETS_WEB_APP_URL === "https://script.google.com/macros/s/AKfycbw0jo8bPRS_pK9YkX1DrkF45485qapubAh-rxFCUQyMaxGbI1KIW_oBKRTMaDQ9l7cM4Q/exec") {
         console.warn("ยังไม่ได้ตั้งค่า GOOGLE_SHEETS_WEB_APP_URL");
         return;
       }
