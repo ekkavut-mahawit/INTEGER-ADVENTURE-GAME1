@@ -419,7 +419,6 @@
   <!-- 1. MAIN MENU VIEW -->
   <div id="view-menu" class="view">
     <div class="menu-container">
-      <!-- เพิ่มรูปโลโก้ตรงกลาง ด้านบนสุด -->
       <img src="logo.png" alt="Logo" style="display: block; margin: 0 auto 20px auto; max-width: 220px; height: auto;">
       <h1 class="menu-title">⚔️ INTEGER ADVENTURE ⚔️</h1>
       <p class="menu-subtitle">🤖 ศึกสงครามหุ่นนักรบ พิชิตอาณาจักรจำนวนเต็ม (ระบบเล่น 2 เครื่อง)</p>
@@ -578,7 +577,7 @@
     </div>
   </div>
 
-  <!-- REALM ANNOUNCEMENT MODAL (เพิ่มหน้าแจ้งบอกเมื่อเข้าด่าน) -->
+  <!-- REALM ANNOUNCEMENT MODAL -->
   <div id="realm-announce-modal" class="modal hidden">
     <div class="modal-card" style="border-color: var(--accent-gold); box-shadow: 0 0 35px rgba(245, 158, 11, 0.5);">
       <div id="realm-announce-icon" style="font-size: 4rem; margin-bottom: 10px;">➕</div>
@@ -680,7 +679,7 @@
     </div>
   </div>
 
-  <!-- 🏆 5. END GAME / VICTORY MODAL (เพิ่มระบบจบเกมสมบูรณ์) -->
+  <!-- 🏆 5. END GAME / VICTORY MODAL -->
   <div id="victory-modal" class="modal hidden">
     <div class="modal-card" style="border-color: var(--accent-gold); box-shadow: 0 0 45px rgba(245, 158, 11, 0.7);">
       <div style="font-size: 3.5rem; margin-bottom: 8px;">👑</div>
@@ -1047,7 +1046,7 @@
       currentRoomCode = code;
       myRole = 0; // Host = P1
       isSpectatorMode = false;
-      hasLoggedThisGame = false; // รีเซ็ตการบันทึกข้อมูลเมื่อสร้างห้องใหม่
+      hasLoggedThisGame = false;
 
       const r1 = ROBOT_PRESETS[p1SelectedRobotIndex];
       const r2 = ROBOT_PRESETS[p2SelectedRobotIndex];
@@ -1104,7 +1103,6 @@
             switchView('view-char-select');
           }
         } else {
-          // Join as P2
           myRole = 1;
           db.ref(`rooms/${code}/players/1`).update({ connected: true });
           listenToRoom(code);
@@ -1122,7 +1120,6 @@
         if (!snap.exists()) return;
         roomData = snap.val();
 
-        // Sync Lobby
         document.getElementById('room-code-display').innerText = `ROOM: ${code}`;
         document.getElementById('game-room-code').innerText = `ROOM: ${code}`;
 
@@ -1138,12 +1135,10 @@
           roleTag.className = 'role-badge role-spec';
         }
 
-        // Lock/Unlock Input in Lobby
         document.getElementById('p1-name-input').disabled = (myRole !== 0);
         document.getElementById('p2-name-input').disabled = (myRole !== 1);
         document.getElementById('btn-start-game').style.display = (myRole === 0) ? 'block' : 'none';
 
-        // ปรับปรุงป้องกันการเขียนชื่อทับขณะพิมพ์
         if (roomData.players[0] && document.activeElement !== document.getElementById('p1-name-input')) {
           document.getElementById('p1-name-input').value = roomData.players[0].name;
         }
@@ -1151,7 +1146,6 @@
           document.getElementById('p2-name-input').value = roomData.players[1].name;
         }
 
-        // 🏆 View Transition & End Game Check
         if (roomData.status === 'ended') {
           showVictoryModal(roomData);
         } else if (roomData.status === 'playing') {
@@ -1252,7 +1246,6 @@
       const p1 = roomData.players[0];
       const p2 = roomData.players[1];
 
-      // Update Players Tokens on Board
       for (let i = 1; i <= TOTAL_TILES; i++) {
         const container = document.getElementById(`tokens-${i}`);
         if (container) container.innerHTML = '';
@@ -1266,7 +1259,6 @@
         }
       });
 
-      // Update HUD
       document.getElementById('p1-card-icon').innerHTML = `<img src="${p1.image}">`;
       document.getElementById('p1-card-name').innerText = p1.name;
       document.getElementById('p1-card-title').innerText = `${p1.robotName} (${p1.title})`;
@@ -1287,11 +1279,9 @@
       const curPlayer = roomData.players[turn];
       document.getElementById('turn-display').innerHTML = `ตาของ: <img src="${curPlayer.image}" style="width:24px; height:24px; object-fit:contain;"> ${curPlayer.name} (${curPlayer.robotName})`;
 
-      // Roll Button state
       const isMyTurn = (myRole === turn);
       document.getElementById('btn-roll').disabled = (!isMyTurn || roomData.phase !== 'idle');
 
-      // Sync Modals/Phases
       syncModalPhase();
     }
 
@@ -1318,7 +1308,6 @@
       `;
     }
 
-    // 🎲 DICE ROLL TRIGGER & ANIMATION SYNC
     function triggerRollDice() {
       if (myRole !== roomData.currentTurn || roomData.phase !== 'idle') return;
 
@@ -1332,7 +1321,6 @@
         lastRoll: outcome
       });
 
-      // Animate Dice
       animate3DDice(outcome, () => {
         if (myRole === roomData.currentTurn) {
           const p = roomData.players[myRole];
@@ -1387,8 +1375,6 @@
     // ----------------------------------------------------
     // 5. QUESTION & MODALS SYNC
     // ----------------------------------------------------
-    
-    // คลังโจทย์จำนวนเต็ม (ประเภทละ 15 ข้อ)
     const QUESTION_BANK = {
       add: [
         { q: '(-7) + 12', a: 5 },
@@ -1662,7 +1648,6 @@
       else timerBox.classList.remove('urgent');
     }
 
-    // ฟังก์ชันเปิด/ปิดเครื่องหมายลบหน้าคำตอบ
     function toggleNegativeSign() {
       const input = document.getElementById('q-answer');
       if (!input) return;
@@ -1696,7 +1681,6 @@
 
       let earnedCrystals = Math.round(BASE_CRYSTAL_REWARD * (roomData.multiplier || 1));
 
-      // บัฟ doubleCrystal
       if (p.activeBuffs && p.activeBuffs.doubleCrystal && isCorrect) {
         earnedCrystals *= 2;
         p.activeBuffs.doubleCrystal = false;
@@ -1709,7 +1693,7 @@
         saveScoreToHOF(p.name, p.robotName, p.crystals);
       } else if (p.inventory && p.inventory.shield > 0) {
         p.inventory.shield--;
-        isCorrect = true; // รอดชีวิต
+        isCorrect = true;
         isShieldUsed = true;
         soundEngine.playShield();
       } else {
@@ -1730,31 +1714,9 @@
       });
     }
 
-    // 🏆 6. END GAME TRIGGER & HANDLER
-    function triggerNextTurn() {
-      if (myRole !== roomData.currentTurn) return;
-
-      const p = roomData.players[myRole];
-      
-      // เมื่อผู้เล่นเดินถึงหรือผ่านช่องสุดท้าย (Zero Castle)
-      if (p.pos >= TOTAL_TILES) {
-        saveScoreToHOF(p.name, p.robotName, p.crystals);
-        db.ref(`rooms/${currentRoomCode}`).update({
-          status: 'ended',
-          winnerId: myRole,
-          phase: 'ended'
-        });
-        return;
-      }
-
-      const nextTurn = (roomData.currentTurn + 1) % 2;
-      db.ref(`rooms/${currentRoomCode}`).update({
-        currentTurn: nextTurn,
-        phase: 'idle'
-      });
-    }
-
-    // 📊 ฟังก์ชันสำหรับส่งข้อมูลผู้เล่นทั้ง 2 คนเข้า Google Sheet
+    // ----------------------------------------------------
+    // 6. END GAME & GOOGLE SHEETS INTEGRATION
+    // ----------------------------------------------------
     function saveGameDataToGoogleSheet(data) {
       if (!GOOGLE_SHEETS_WEB_APP_URL || GOOGLE_SHEETS_WEB_APP_URL === "YOUR_GOOGLE_SHEETS_WEB_APP_URL") {
         console.warn("ยังไม่ได้ตั้งค่า GOOGLE_SHEETS_WEB_APP_URL");
@@ -1782,9 +1744,9 @@
 
       fetch(GOOGLE_SHEETS_WEB_APP_URL, {
         method: 'POST',
-        mode: 'no-cors',
+        mode: 'no-cors', // ป้องกันการติดปัญหา CORS
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'text/plain' // ใช้ text/plain เพื่อรองรับ no-cors
         },
         body: JSON.stringify(payload)
       })
@@ -1793,28 +1755,21 @@
     }
 
     function showVictoryModal(data) {
-      const winnerId = (data.winnerId !== undefined) ? data.winnerId : 0;
+      if (!hasLoggedThisGame) {
+        saveGameDataToGoogleSheet(data);
+        hasLoggedThisGame = true;
+      }
+
+      const winnerId = data.winnerId !== undefined ? data.winnerId : 0;
       const winner = data.players[winnerId];
 
-      document.getElementById('question-modal').classList.add('hidden');
-      document.getElementById('shop-modal').classList.add('hidden');
-
-      soundEngine.playVictory();
-
       if (winner) {
-        document.getElementById('winner-icon-display').innerHTML = `<img src="${winner.image}" style="width:75px; height:75px; object-fit:contain; filter:drop-shadow(0 0 10px var(--accent-gold));">`;
+        document.getElementById('winner-icon-display').innerHTML = `<img src="${winner.image}" style="width:70px; height:70px; object-fit:contain;">`;
         document.getElementById('winner-name-display').innerText = `${winner.name} (${winner.robotName})`;
         document.getElementById('winner-stats-display').innerText = `สะสม Crystal ทั้งหมด: ${winner.crystals} 💎`;
-        
-        saveScoreToHOF(winner.name, winner.robotName, winner.crystals);
       }
 
-      // 📊 ส่งข้อมูลเข้า Google Sheet เฉพาะฝั่ง Host (P1) เพื่อป้องกันการส่งซ้ำสองครั้ง
-      if (myRole === 0 && !hasLoggedThisGame) {
-        hasLoggedThisGame = true;
-        saveGameDataToGoogleSheet(data);
-      }
-
+      soundEngine.playVictory();
       document.getElementById('victory-modal').classList.remove('hidden');
     }
 
@@ -1823,39 +1778,62 @@
       showHOF();
     }
 
-    document.getElementById('q-answer').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') triggerSubmitAnswer();
-    });
+    function triggerNextTurn() {
+      if (myRole !== roomData.currentTurn) return;
 
-    // 🛒 SHOP LOGIC
-    function openShopModal(fromMainMenu = false) {
-      isFromMainMenuShop = fromMainMenu;
-      const targetRole = (typeof myRole === 'number') ? myRole : 0;
-      const p = roomData ? roomData.players[targetRole] : { name: 'ผู้เข้าชม', crystals: 0 };
+      const p = roomData.players[myRole];
       
-      document.getElementById('shop-player-name').innerText = p.name;
-      document.getElementById('shop-player-crystals').innerText = p.crystals;
+      // เมื่อผู้เล่นเดินถึงหรือผ่านช่องสุดท้าย (Zero Castle)
+      if (p.pos >= TOTAL_TILES) {
+        saveScoreToHOF(p.name, p.robotName, p.crystals);
+        db.ref(`rooms/${currentRoomCode}`).update({
+          status: 'ended',
+          winnerId: myRole
+        });
+        return;
+      }
 
-      const grid = document.getElementById('shop-items-grid');
-      grid.innerHTML = SHOP_ITEMS.map(item => {
-        const canAfford = p.crystals >= item.price && !isSpectatorMode;
-        return `
-          <div class="shop-item-card">
-            <div class="shop-item-info">
-              <strong>${item.name}</strong>
-              <p>${item.desc}</p>
-            </div>
-            <div class="shop-item-buy">
-              <span class="shop-price">${item.price} 💎</span>
-              <button class="btn-buy" onclick="buyShopItem('${item.id}')" ${!canAfford ? 'disabled' : ''}>
-                ${canAfford ? 'แลกซื้อ' : 'คริสตัลไม่พอ'}
-              </button>
-            </div>
+      // สลับตาผู้เล่น
+      const nextTurn = (roomData.currentTurn === 0) ? 1 : 0;
+      db.ref(`rooms/${currentRoomCode}`).update({
+        currentTurn: nextTurn,
+        phase: 'idle',
+        multiplier: 1
+      });
+    }
+
+    // ----------------------------------------------------
+    // 7. SHOP & HALL OF FAME LOGIC
+    // ----------------------------------------------------
+    function openShopModal(isMenu = false) {
+      isFromMainMenuShop = isMenu;
+      const modal = document.getElementById('shop-modal');
+      const nameEl = document.getElementById('shop-player-name');
+      const crystalEl = document.getElementById('shop-player-crystals');
+      const itemsGrid = document.getElementById('shop-items-grid');
+
+      let curPlayer = null;
+      if (!isMenu && roomData && roomData.players && myRole !== 'spectator') {
+        curPlayer = roomData.players[myRole];
+      }
+
+      nameEl.innerText = curPlayer ? curPlayer.name : 'โหมดชมร้านค้า';
+      crystalEl.innerText = curPlayer ? curPlayer.crystals : 0;
+
+      itemsGrid.innerHTML = SHOP_ITEMS.map(item => `
+        <div class="shop-item-card">
+          <div class="shop-item-info">
+            <strong>${item.name}</strong>
+            <p>${item.desc}</p>
           </div>
-        `;
-      }).join('');
+          <div class="shop-item-buy">
+            <span class="shop-price">${item.price} 💎</span>
+            <button class="btn-buy" onclick="buyShopItem('${item.id}')" ${(!curPlayer || curPlayer.crystals < item.price) ? 'disabled' : ''}>ซื้อไอเทม</button>
+          </div>
+        </div>
+      `).join('');
 
-      document.getElementById('shop-modal').classList.remove('hidden');
+      modal.classList.remove('hidden');
     }
 
     function closeShopModal() {
@@ -1863,96 +1841,80 @@
     }
 
     function buyShopItem(itemId) {
-      const targetRole = (typeof myRole === 'number') ? myRole : 0;
-      if (!roomData || !roomData.players || !roomData.players[targetRole]) return;
-      const p = roomData.players[targetRole];
+      if (isFromMainMenuShop || !roomData || myRole === 'spectator') return;
+
+      const p = roomData.players[myRole];
       const item = SHOP_ITEMS.find(i => i.id === itemId);
       if (!item || p.crystals < item.price) return;
 
       p.crystals -= item.price;
-      if (!p.inventory) p.inventory = { shield: 0, timeExtender: 0, doubleCrystal: 0, warpBoost: 0 };
       p.inventory[itemId] = (p.inventory[itemId] || 0) + 1;
-
       soundEngine.playShopBuy();
 
-      db.ref(`rooms/${currentRoomCode}/players/${targetRole}`).update(p).then(() => {
-        openShopModal(isFromMainMenuShop);
+      db.ref(`rooms/${currentRoomCode}/players/${myRole}`).set(p).then(() => {
+        openShopModal(false);
       });
     }
 
     function useItem(itemId, playerIndex) {
       if (myRole !== playerIndex || myRole !== roomData.currentTurn) return;
+
       const p = roomData.players[playerIndex];
       if (!p.inventory || p.inventory[itemId] <= 0) return;
 
       if (itemId === 'warpBoost') {
-        if (roomData.phase !== 'idle') return alert('ใช้งานได้เฉพาะก่อนทอยเต๋าเท่านั้น');
-        p.inventory[itemId]--;
-        const newPos = Math.min(p.pos + 3, TOTAL_TILES);
-        p.pos = newPos;
+        p.inventory.warpBoost--;
+        p.pos = Math.min(p.pos + 3, TOTAL_TILES);
         soundEngine.playWarp();
-        db.ref(`rooms/${currentRoomCode}/players/${playerIndex}`).update(p);
+        db.ref(`rooms/${currentRoomCode}/players/${playerIndex}`).set(p);
       } else if (itemId === 'timeExtender') {
-        if (p.activeBuffs && p.activeBuffs.timeExtender) return;
-        p.inventory[itemId]--;
-        if (!p.activeBuffs) p.activeBuffs = {};
+        p.inventory.timeExtender--;
         p.activeBuffs.timeExtender = true;
-        soundEngine.playShopBuy();
-        db.ref(`rooms/${currentRoomCode}/players/${playerIndex}`).update(p);
+        soundEngine.playClick();
+        db.ref(`rooms/${currentRoomCode}/players/${playerIndex}`).set(p);
       } else if (itemId === 'doubleCrystal') {
-        if (p.activeBuffs && p.activeBuffs.doubleCrystal) return;
-        p.inventory[itemId]--;
-        if (!p.activeBuffs) p.activeBuffs = {};
+        p.inventory.doubleCrystal--;
         p.activeBuffs.doubleCrystal = true;
-        soundEngine.playShopBuy();
-        db.ref(`rooms/${currentRoomCode}/players/${playerIndex}`).update(p);
+        soundEngine.playClick();
+        db.ref(`rooms/${currentRoomCode}/players/${playerIndex}`).set(p);
       }
     }
 
-    function saveScoreToHOF(name, robot, score) {
-      if (!name || score <= 0) return;
-      const hofRef = db.ref('hallOfFame');
-      hofRef.push({
+    function saveScoreToHOF(name, robotName, crystals) {
+      db.ref('hallOfFame').push({
         name: name,
-        robot: robot,
-        score: score,
+        robotName: robotName,
+        crystals: crystals,
         timestamp: Date.now()
       });
     }
 
     function loadHOFData() {
-      db.ref('hallOfFame').orderByChild('score').limitToLast(10).once('value').then(snap => {
+      db.ref('hallOfFame').orderByChild('crystals').limitToLast(10).once('value', snap => {
         const list = [];
         snap.forEach(child => {
           list.push(child.val());
         });
-        list.sort((a, b) => b.score - a.score);
+        list.reverse();
 
-        const r1Name = document.getElementById('hof-name-1');
-        const r1Score = document.getElementById('hof-score-1');
-        const r2Name = document.getElementById('hof-name-2');
-        const r2Score = document.getElementById('hof-score-2');
-        const r3Name = document.getElementById('hof-name-3');
-        const r3Score = document.getElementById('hof-score-3');
+        document.getElementById('hof-name-1').innerText = list[0] ? list[0].name : '-';
+        document.getElementById('hof-score-1').innerText = list[0] ? `${list[0].crystals} 💎` : '0 💎';
 
-        if (r1Name) r1Name.innerText = list[0] ? list[0].name : '-';
-        if (r1Score) r1Score.innerText = list[0] ? `${list[0].score} 💎` : '0 💎';
-        if (r2Name) r2Name.innerText = list[1] ? list[1].name : '-';
-        if (r2Score) r2Score.innerText = list[1] ? `${list[1].score} 💎` : '0 💎';
-        if (r3Name) r3Name.innerText = list[2] ? list[2].name : '-';
-        if (r3Score) r3Score.innerText = list[2] ? `${list[2].score} 💎` : '0 💎';
+        document.getElementById('hof-name-2').innerText = list[1] ? list[1].name : '-';
+        document.getElementById('hof-score-2').innerText = list[1] ? `${list[1].crystals} 💎` : '0 💎';
+
+        document.getElementById('hof-name-3').innerText = list[2] ? list[2].name : '-';
+        document.getElementById('hof-score-3').innerText = list[2] ? `${list[2].crystals} 💎` : '0 💎';
 
         const tbody = document.getElementById('hof-list');
-        if (tbody) {
-          tbody.innerHTML = list.map((item, idx) => `
-            <tr>
-              <td>${idx + 1}</td>
-              <td>${item.name}</td>
-              <td>${item.robot || '-'}</td>
-              <td style="color:var(--accent-gold); font-weight:bold;">${item.score} 💎</td>
-            </tr>
-          `).join('');
-        }
+        tbody.innerHTML = list.map((item, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${item.name}</td>
+            <td>${item.robotName}</td>
+            <td style="color:var(--accent-gold); font-weight:bold;">${item.crystals} 💎</td>
+          </tr>
+        `).join('');
       });
     }
   </script>
