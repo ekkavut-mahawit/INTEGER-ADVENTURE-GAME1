@@ -647,9 +647,9 @@
         </div>
 
         <div class="input-wrapper" style="display: flex; gap: 8px;">
-  <button type="button" onclick="toggleNegativeSign()" style="padding: 0 16px; font-size: 1.5rem; font-weight: bold; background: #334155; color: var(--accent-gold); border: 2px solid #475569; border-radius: 12px;">±</button>
-  <input type="text" id="q-answer" inputmode="numeric" placeholder="ป้อนคำตอบที่นี่..." autofocus autocomplete="off" style="flex: 1;">
-</div>
+          <button type="button" onclick="toggleNegativeSign()" style="padding: 0 16px; font-size: 1.5rem; font-weight: bold; background: #334155; color: var(--accent-gold); border: 2px solid #475569; border-radius: 12px;">±</button>
+          <input type="text" id="q-answer" inputmode="numeric" placeholder="ป้อนคำตอบที่นี่..." autofocus autocomplete="off" style="flex: 1;">
+        </div>
 
         <button id="btn-submit-ans" onclick="triggerSubmitAnswer()" class="btn-submit">⚡ ยืนยันคำตอบ (Enter)</button>
       </div>
@@ -1865,6 +1865,23 @@
       }
     }
 
+    // ----------------------------------------------------
+    // 📌 FIX 1: ฟังก์ชันสลับเครื่องหมายบวก/ลบ (±)
+    // ----------------------------------------------------
+    function toggleNegativeSign() {
+      const input = document.getElementById('q-answer');
+      if (!input) return;
+      let val = input.value;
+      if (val.startsWith('-')) {
+        input.value = val.substring(1);
+      } else {
+        input.value = '-' + val;
+      }
+    }
+
+    // ----------------------------------------------------
+    // 📌 FIX 2: การใช้ไอเทม (useItem) และระบบ Hall of Fame
+    // ----------------------------------------------------
     function useItem(itemId, playerIndex) {
       if (playerIndex !== myRole || playerIndex !== roomData.currentTurn) return;
       const p = roomData.players[playerIndex];
@@ -1880,7 +1897,7 @@
           p.lastRealm = newRealmObj.type;
 
           db.ref(`rooms/${currentRoomCode}/players/${playerIndex}`).set(p).then(() => {
-            alert(`🚀 ${p.name} ใช้เทอร์โบบูสต์! เดินหน้าเพิ่ม 3 ช่องทันที`);
+            alert(`🚀 ใช้ไอเทม Warp Boost! เดินหน้าเพิ่ม 3 ช่อง ไปยังช่อง ${p.pos}`);
             if (oldRealm !== newRealmObj.type) {
               db.ref(`rooms/${currentRoomCode}`).update({
                 phase: 'realm_announce',
@@ -1892,64 +1909,52 @@
             }
           });
         } else if (itemId === 'timeExtender') {
-          if (!p.activeBuffs.timeExtender) {
-            p.inventory.timeExtender--;
-            p.activeBuffs.timeExtender = true;
-            soundEngine.playWarp();
-            db.ref(`rooms/${currentRoomCode}/players/${playerIndex}`).set(p);
-            alert(`⏱️ เปิดใช้งานยืดเวลา! ข้อถัดไปจะเพิ่มเวลาตอบอีก 5 วินาที`);
-          }
+          p.inventory.timeExtender--;
+          p.activeBuffs.timeExtender = true;
+          db.ref(`rooms/${currentRoomCode}/players/${playerIndex}`).set(p);
         } else if (itemId === 'doubleCrystal') {
-          if (!p.activeBuffs.doubleCrystal) {
-            p.inventory.doubleCrystal--;
-            p.activeBuffs.doubleCrystal = true;
-            soundEngine.playShopBuy();
-            db.ref(`rooms/${currentRoomCode}/players/${playerIndex}`).set(p);
-            alert(`✨ เปิดใช้งานคูณคริสตัล x2 ในการตอบถูกครั้งต่อไป!`);
-          }
-        } else if (itemId === 'shield') {
-          alert(`🛡️ เกราะกันตอบผิดเป็นบัฟอัตโนมัติ จะทำงานเมื่อคุณตอบผิด! (คุณมีเกราะ ${p.inventory.shield} ชิ้น)`);
+          p.inventory.doubleCrystal--;
+          p.activeBuffs.doubleCrystal = true;
+          db.ref(`rooms/${currentRoomCode}/players/${playerIndex}`).set(p);
         }
       }
     }
 
-    // 🏆 HALL OF FAME LOGIC
     function saveScoreToHOF(name, robotName, crystals) {
-      let data = JSON.parse(localStorage.getItem('math_robot_hof') || '[]');
-      const exist = data.find(d => d.name === name);
-      if (exist) { 
-        exist.crystals = Math.max(exist.crystals, crystals);
-        exist.robotName = robotName;
-      } else { 
-        data.push({ name, robotName, crystals }); 
-      }
-      data.sort((a,b) => b.crystals - a.crystals);
-      localStorage.setItem('math_robot_hof', JSON.stringify(data));
+      db.ref('hof').push({
+        name: name,
+        robotName: robotName,
+        crystals: crystals,
+        timestamp: Date.now()
+      });
     }
 
     function loadHOFData() {
-      let data = JSON.parse(localStorage.getItem('math_robot_hof') || '[]');
-      
-      document.getElementById('hof-name-1').innerText = data[0] ? data[0].name : '-';
-      document.getElementById('hof-score-1').innerText = data[0] ? `${data[0].crystals} 💎` : '0 💎';
-      
-      document.getElementById('hof-name-2').innerText = data[1] ? data[1].name : '-';
-      document.getElementById('hof-score-2').innerText = data[1] ? `${data[1].crystals} 💎` : '0 💎';
-      
-      document.getElementById('hof-name-3').innerText = data[2] ? data[2].name : '-';
-      document.getElementById('hof-score-3').innerText = data[2] ? `${data[2].crystals} 💎` : '0 💎';
+      db.ref('hof').orderByChild('crystals').limitToLast(10).once('value', snap => {
+        const list = [];
+        snap.forEach(child => {
+          list.push(child.val());
+        });
+        list.reverse();
+        
+        for (let i = 0; i < 3; i++) {
+          const item = list[i] || { name: '-', crystals: 0 };
+          document.getElementById(`hof-name-${i+1}`).innerText = item.name;
+          document.getElementById(`hof-score-${i+1}`).innerText = `${item.crystals} 💎`;
+        }
 
-      const list = document.getElementById('hof-list');
-      if (list) {
-        list.innerHTML = data.map((d, i) => `
-          <tr>
-            <td>${i + 1}</td>
-            <td>${d.name}</td>
-            <td>${d.robotName}</td>
-            <td>${d.crystals} 💎</td>
-          </tr>
-        `).join('');
-      }
+        const tbody = document.getElementById('hof-list');
+        if (tbody) {
+          tbody.innerHTML = list.map((item, idx) => `
+            <tr>
+              <td>${idx + 1}</td>
+              <td>${item.name}</td>
+              <td>${item.robotName || '-'}</td>
+              <td>${item.crystals} 💎</td>
+            </tr>
+          `).join('');
+        }
+      });
     }
   </script>
 </body>
